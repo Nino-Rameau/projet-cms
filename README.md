@@ -1,165 +1,107 @@
-# PageBlanche CMS
+# CMS PageBlanche
 
-CMS no-code base sur Next.js, Prisma et NextAuth.
+Le projet est conteneurisé avec Docker et est déployé sur un VPS via un reverse proxy avec Traefik.
 
-## Stack
+## Sommaire
 
-- Next.js (App Router)
-- React
-- Prisma + MySQL
-- NextAuth (Credentials)
-- Tailwind CSS
-- Zustand + dnd-kit
+1. [Technologies utilisées](#technologies-utilisées)
+2. [Fonctionnalités Principales](#fonctionnalités-principales)
+3. [Architecture & Déploiement Docker](#architecture--déploiement-docker)
+   - [Prérequis](#prérequis)
+   - [Lancement en Local](#lancement-en-local)
+   - [Déploiement en Production (VPS)](#déploiement-en-production-vps)
+4. [Visuel](#visuel)
+5. [Auteur](#auteur)
+6. [Licence](#licence)
 
-## Prerequis
+## Technologies utilisées
 
-- Node.js 20+
-- MySQL (local ou distant)
+- **[Next.js (App Router)](https://nextjs.org/)** : Framework React propulsant le front-end et le back-end (API Routes, Middleware multi-domaines).
+- **[Prisma & MySQL](https://www.prisma.io/)** : ORM et base de données relationnelle pour le stockage des sites, pages, et utilisateurs.
+- **[NextAuth.js](https://next-auth.js.org/)** : Authentification sécurisée des créateurs et administrateurs.
+- **[Tailwind CSS](https://tailwindcss.com/)** : Framework CSS utilitaire.
+- **[Zustand & dnd-kit](https://dndkit.com/)** : Gestion de l'état global et système de glisser-déposer (drag-and-drop) de l'éditeur "no-code".
+- **[Docker & Traefik](https://traefik.io/)** : Déploiement conteneurisé, reverse-proxy natif et création automatique des certificats SSL/TLS.
 
-## Installation
+## Fonctionnalités Principales
 
+- **Constructeur de page No-Code** : Éditeur visuel interactif basé sur un système de blocs pour créer vos propres arborescences de page.
+- **Routage Multi-Locataires (Multi-Tenant)** : Le CMS gère automatiquement l'affichage. En interne, visualisez vos sites sur `/view/mon-site`. Visités depuis le domaine final personnalisé, les sous-chemins se réécrivent automatiquement en racine. Les liens dans l'éditeur s'adaptent d'eux-mêmes !
+- **Sélecteur d'environnement DB** : Le projet jongle dynamiquement entre `DEV_DATABASE_URL` et `PROD_DATABASE_URL` pour prévenir les accidents.
+
+## Architecture & Déploiement Docker
+
+### Prérequis
+
+Pour lancer ce projet, vous avez besoin de :
+- Docker et Docker Compose
+- Git
+- *(En production)* : Un serveur VPS avec les ports 80 et 443 ouverts, et un nom de domaine ciblant son adresse IP.
+
+### Lancement en Local
+
+Pour tester le projet en local :
+
+1. Cloner le repository dans un dossier :
 ```bash
-npm install
+git clone <url-du-depot> .
 ```
 
-## Configuration
-
-1. Copier le fichier d'environnement:
-
+2. Configurer les variables d'environnement à la racine :
 ```bash
 cp .env.example .env
 ```
+Assurez-vous que `DEV_DATABASE_URL` est bien défini, ainsi qu'un `NEXTAUTH_SECRET`.
 
-2. Mettre a jour les valeurs dans `.env`:
-
-- `DEV_DATABASE_URL`: connexion MySQL Prisma pour le developpement local
-- `PROD_DATABASE_URL`: connexion MySQL Prisma pour la production
-- `NEXTAUTH_SECRET`: secret long et aleatoire pour les JWT/sessions
-- `NEXTAUTH_URL`: URL de l'app (ex: `http://localhost:3000`)
-
-Selection automatique:
-
-- en dev (`NODE_ENV != production`): Prisma utilise `DEV_DATABASE_URL`
-- en production (`NODE_ENV=production`): Prisma utilise `PROD_DATABASE_URL`
-- compatibilite legacy: fallback possible sur `DATABASE_URL` si defini
-
-Exemple de generation de secret:
-
-```bash
-openssl rand -base64 32
+3. Si vous n'utilisez pas de reverse-proxy local, modifiez le port exposé l'application dans `docker-compose.yml` (service `app`) :
+```yaml
+ports:
+  - "8080:3000"
 ```
 
-## Base de donnees
-
-Generer le client Prisma:
-
-```bash
-npx prisma generate
-```
-
-Appliquer les migrations (si vous utilisez Prisma Migrate):
-
-```bash
-npx prisma migrate dev
-```
-
-## Lancer le projet
-
-Mode developpement:
-
-```bash
-npm run dev
-```
-
-Build production:
-
-```bash
-npm run build
-npm run start
-```
-
-## Scripts
-
-- `npm run dev`: demarre le serveur de dev
-- `npm run build`: build de production
-- `npm run start`: lance le build
-- `npm run lint`: lint (si configure)
-
-## Deploiement VPS rapide (Docker + Traefik)
-
-Le projet est full-stack Next.js (front + back dans le meme service) avec:
-
-- MySQL en service separe
-- Traefik en reverse proxy (routers + middlewares + TLS Let\'s Encrypt)
-
-Fichiers fournis:
-
-- `Dockerfile`
-- `docker-compose.yml`
-- `docker-entrypoint.sh`
-
-### 1) Variables d'environnement (production)
-
-Sur le serveur VPS, exportez ou placez ces variables dans un fichier `.env` a cote de `docker-compose.yml`:
-
-```env
-APP_DOMAIN=votre-domaine.com
-LETSENCRYPT_EMAIL=vous@votre-domaine.com
-
-MYSQL_ROOT_PASSWORD=change-root-password
-MYSQL_DATABASE=pageblanche
-MYSQL_USER=pageblanche
-MYSQL_PASSWORD=change-db-password
-
-NEXTAUTH_SECRET=change-me-with-a-long-random-secret
-NEXTAUTH_URL=https://votre-domaine.com
-```
-
-Important:
-
-- Le domaine doit deja pointer vers l'IP du VPS (DNS A/AAAA).
-- Les ports 80 et 443 doivent etre ouverts.
-
-### 2) Lancer en production
-
+4. Lancer les conteneurs via Docker Compose (`-d` pour lancer en arrière-plan, `--build` pour construire l'image Next.js) :
 ```bash
 docker compose up -d --build
 ```
 
-### 3) Suivre les logs
+5. L'application est maintenant accessible sur : http://localhost:8080/
 
+### Déploiement en Production (VPS)
+
+Sur le serveur de production, l'application fonctionne derrière un reverse proxy Traefik pour distribuer correctement les requêtes (notamment pour les domaines personnalisés des clients).
+
+1. Cloner le repository sur le VPS :
 ```bash
-docker compose logs -f traefik
-docker compose logs -f app
-docker compose logs -f db
+git clone <url-du-depot> .
 ```
 
-### 4) Mise a jour applicative
+2. Remplir le fichier `.env` avec les valeurs de production :
+```text
+APP_DOMAIN=domaine-du-cms.com
+PROD_DATABASE_URL=mysql://user:pass@db:3306/db_name
+NEXTAUTH_SECRET=votre-secret-long
+```
 
+3. Réseau Docker : Assurez-vous que le réseau externe pour Traefik existe (selon votre configuration serveur existante) ou laissez Docker Compose le construire. S'il doit être externe :
 ```bash
-git pull
+docker network create web
+```
+
+4. Mise en ligne :
+```bash
 docker compose up -d --build
 ```
 
-Notes:
+L'application et les sites personnalisés de vos utilisateurs sont désormais en ligne et routés avec SSL actif via Traefik.
 
-- Le service `app` lance automatiquement `prisma db push` au demarrage.
-- La base MySQL est persistante via le volume Docker `mysql_data`.
-- Les certificats TLS sont persistes dans le volume `traefik_letsencrypt`.
-- Le port MySQL n'est pas expose publiquement.
+## Visuel
 
-### A quoi sert `docker-entrypoint.sh` ?
+![Page d'accueil](img-readme/)
 
-Ce script est execute au demarrage du conteneur `app`, avant le lancement de Next.js.
+## Auteur
 
-Il sert a:
+**[Nino Rameau](https://nino-rameau.fr)** - [LinkedIn](https://www.linkedin.com/in/nino-rameau-1a0636332) - [GitHub](https://github.com/Nino-Rameau)
 
-1. Synchroniser le schema Prisma avec la base (`npx prisma db push`).
-2. Lancer ensuite l'application (`npm run start`).
+## Licence
 
-L'interet en VPS: eviter d'oublier l'etape Prisma lors d'un redeploiement.
-
-## Notes
-
-- Les pages en `DRAFT` ne sont pas servies sur les URLs publiques `/view/...`.
-- Les composants globaux (header/footer) sont edites separement et injectes sur toutes les pages.
+Réalisé dans le cadre scolaire en avril 2026.
