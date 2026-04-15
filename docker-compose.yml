@@ -46,8 +46,8 @@ volumes:
   mysql_data:
 
 networks:
-  web:
-    # On laisse Docker créer le réseau, mais ton ancien Traefik devra peut-être y être connecté
-    # ou on utilise le réseau existant de ton portfolio (voir ci-dessous)
+  traefik_externe:
+    external: true
+    name: traefik
   internal:
     internal: true
