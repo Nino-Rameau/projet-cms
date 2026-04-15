@@ -1,19 +1,19 @@
 services:
-  # LE SERVICE TRAEFIK A ÉTÉ SUPPRIMÉ ICI 
-  # car il tourne déjà sur ton VPS (ID f1c0d9099cd0)
-
   db:
     image: mysql:8.4
     container_name: pageblanche-db
     restart: unless-stopped
     env_file: .env
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
-      retries: 20
+      retries: 5
     networks:
       - internal
 
@@ -27,25 +27,27 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    # On peut garder le port 8080 exposé si tu veux y accéder via IP:8080
-    # Sinon tu peux le supprimer pour ne passer QUE par le domaine
     ports:
-      - "8080:3000" 
+      - "8080:3000"
     labels:
       - "traefik.enable=true"
-      # IMPORTANT : On utilise le réseau que ton ancien Traefik connaît déjà
-      - "traefik.docker.network=cms-pageblanche_web" 
-      - "traefik.http.routers.pageblanche.rule=Host(`${APP_DOMAIN}`)"
-      - "traefik.http.routers.pageblanche.entrypoints=web" # ou websecure si tu as le SSL
+      # On utilise le réseau de ton Traefik existant
+      - "traefik.docker.network=traefik"
+      - "traefik.http.routers.pageblanche.rule=Host(`cms.nino-rameau.fr`)"
+      - "traefik.http.routers.pageblanche.entrypoints=websecure"
+      - "traefik.http.routers.pageblanche.tls=true"
+      # /!\ Vérifie si ton resolver s'appelle 'letsencrypt' ou 'myresolver' dans ton autre projet
+      - "traefik.http.routers.pageblanche.tls.certresolver=letsencrypt"
       - "traefik.http.services.pageblanche.loadbalancer.server.port=3000"
     networks:
-      - web
+      - traefik_externe
       - internal
 
 volumes:
   mysql_data:
 
 networks:
+  # On dit à Docker que ce réseau existe déjà sur le VPS
   traefik_externe:
     external: true
     name: traefik
