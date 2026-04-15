@@ -3,6 +3,7 @@ services:
     image: mysql:8.4
     container_name: pageblanche-db
     restart: unless-stopped
+    command: --default-authentication-plugin=mysql_native_password
     env_file: .env
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
