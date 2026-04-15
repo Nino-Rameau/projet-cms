@@ -32,9 +32,16 @@ cp .env.example .env
 
 2. Mettre a jour les valeurs dans `.env`:
 
-- `DATABASE_URL`: connexion MySQL Prisma
+- `DEV_DATABASE_URL`: connexion MySQL Prisma pour le developpement local
+- `PROD_DATABASE_URL`: connexion MySQL Prisma pour la production
 - `NEXTAUTH_SECRET`: secret long et aleatoire pour les JWT/sessions
 - `NEXTAUTH_URL`: URL de l'app (ex: `http://localhost:3000`)
+
+Selection automatique:
+
+- en dev (`NODE_ENV != production`): Prisma utilise `DEV_DATABASE_URL`
+- en production (`NODE_ENV=production`): Prisma utilise `PROD_DATABASE_URL`
+- compatibilite legacy: fallback possible sur `DATABASE_URL` si defini
 
 Exemple de generation de secret:
 

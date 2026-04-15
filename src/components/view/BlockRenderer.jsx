@@ -82,14 +82,45 @@ function SocialIconSvg({ name, size = 16, className = '' }) {
   );
 }
 
-export default function BlockRenderer({ block, siteSlug = '' }) {
+export default function BlockRenderer({ block, siteSlug = '', isCustomDomain = false }) {
   if (!block) return null;
 
+
+  const processHtmlLinks = (html) => {
+    if (!html) return '';
+    return html.replace(/href=["']([^"']+)["']/gi, (match, url) => {
+      let finalUrl = url;
+      // Normaliser le lien s'il commence par / ou par le l'URL courante pointant en interne
+      if (finalUrl.startsWith('http://localhost') || (typeof process !== 'undefined' && process.env.APP_DOMAIN && finalUrl.startsWith('https://' + process.env.APP_DOMAIN))) {
+        try {
+          const urlObj = new URL(finalUrl);
+          finalUrl = urlObj.pathname;
+        } catch(e) {}
+      }
+
+      if (finalUrl.startsWith('/')) {
+        let normalizedPath = finalUrl.replace(new RegExp('^/view/' + siteSlug + '/?'), '/');
+        if (normalizedPath === '' || normalizedPath === '/') normalizedPath = '/home';
+        
+        if (normalizedPath === '/home') normalizedPath = '/';
+
+        if (isCustomDomain) {
+           return 'href="' + normalizedPath + '"';
+        } else {
+           const suffix = normalizedPath === '/' ? 'home' : (normalizedPath.startsWith('/') ? normalizedPath.substring(1) : normalizedPath);
+           return 'href="/view/' + siteSlug + '/' + suffix + '"';
+        }
+      }
+      return match;
+    });
+  };
+
   const sanitizeRichText = (html = '') => {
-    return String(html)
+    const clean = String(html)
       .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
       .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
       .replace(/\son\w+=("[^"]*"|'[^']*')/gi, '');
+    return processHtmlLinks(clean);
   };
 
   const normalizeSiteRelativePath = (rawPath = '') => {
@@ -112,9 +143,9 @@ export default function BlockRenderer({ block, siteSlug = '' }) {
         return props.href || '#';
       case 'page': {
         const normalized = normalizeSiteRelativePath(props.pagePath);
-        if (!siteSlug) return '#';
-        if (!normalized) return `/view/${siteSlug}/home`;
-        return `/view/${siteSlug}/${normalized}`;
+        if (!normalized) return isCustomDomain ? '/' : (`/view/${siteSlug}/home`);
+        const finalPath = normalized === 'home' && isCustomDomain ? '' : normalized;
+        return isCustomDomain ? `/${finalPath}` : `/view/${siteSlug}/${normalized}`;
       }
       case 'file':
         return props.fileUrl || '#';
@@ -218,7 +249,7 @@ export default function BlockRenderer({ block, siteSlug = '' }) {
       return (
         <section className={`p-8 w-full rounded-xl border border-transparent mb-6 ${className}`} style={{...style, ...props.style}}>
           {children && children.length > 0 ? (
-            children.map(child => <BlockRenderer key={child.id} block={child} siteSlug={siteSlug} />)
+            children.map(child => <BlockRenderer key={child.id} block={child} siteSlug={siteSlug} isCustomDomain={isCustomDomain} />)
           ) : (
             <div className="text-slate-400">Section vide</div>
           )}
@@ -228,7 +259,7 @@ export default function BlockRenderer({ block, siteSlug = '' }) {
       return (
         <div className={`w-full rounded-lg border border-transparent p-4 ${className}`} style={{...style, ...props.style}}>
           {children && children.length > 0 ? (
-            children.map(child => <BlockRenderer key={child.id} block={child} siteSlug={siteSlug} />)
+            children.map(child => <BlockRenderer key={child.id} block={child} siteSlug={siteSlug} isCustomDomain={isCustomDomain} />)
           ) : (
             <div className="text-slate-400 text-sm">Colonne vide</div>
           )}
@@ -238,7 +269,7 @@ export default function BlockRenderer({ block, siteSlug = '' }) {
       return (
         <div className={`w-full rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${className}`} style={{...style, ...props.style}}>
           {children && children.length > 0 ? (
-            children.map(child => <BlockRenderer key={child.id} block={child} siteSlug={siteSlug} />)
+            children.map(child => <BlockRenderer key={child.id} block={child} siteSlug={siteSlug} isCustomDomain={isCustomDomain} />)
           ) : (
             <div className="text-slate-400 text-sm">Carte vide</div>
           )}
@@ -287,7 +318,7 @@ export default function BlockRenderer({ block, siteSlug = '' }) {
       return (
         <div className={`border p-4 bg-gray-50 ${className}`} style={{...style, ...props.style}}>
           <h4>Type inconnu: {type}</h4>
-          {children && children.map(child => <BlockRenderer key={child.id} block={child} siteSlug={siteSlug} />)}
+          {children && children.map(child => <BlockRenderer key={child.id} block={child} siteSlug={siteSlug} isCustomDomain={isCustomDomain} />)}
         </div>
       );
   }
