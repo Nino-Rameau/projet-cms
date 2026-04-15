@@ -1,25 +1,6 @@
 services:
-  traefik:
-    image: traefik:v3.2
-    container_name: pageblanche-traefik
-    user: root 
-    restart: unless-stopped
-    command:
-      - --providers.docker=true
-      - --providers.docker.exposedbydefault=false
-      # On force l'endpoint pour éviter que Traefik ne cherche au mauvais endroit
-      - --providers.docker.endpoint=unix:///var/run/docker.sock
-      - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
-    ports:
-      # On commente le 8080 ici pour le laisser à l'App en local
-      # - "8080:80" 
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - traefik_letsencrypt:/letsencrypt
-    networks:
-      - web
+  # LE SERVICE TRAEFIK A ÉTÉ SUPPRIMÉ ICI 
+  # car il tourne déjà sur ton VPS (ID f1c0d9099cd0)
 
   db:
     image: mysql:8.4
@@ -29,7 +10,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 20
@@ -46,26 +27,27 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # On peut garder le port 8080 exposé si tu veux y accéder via IP:8080
+    # Sinon tu peux le supprimer pour ne passer QUE par le domaine
     ports:
-      # --- LA LIGNE DE SAUVETAGE POUR LE LOCAL ---
-      # En local, on accède à l'app DIRECTEMENT sur 8080 sans passer par Traefik
       - "8080:3000" 
     labels:
-      - traefik.enable=true
-      - traefik.docker.network=web
-      # Config Traefik (utile pour la prod avec ton vrai domaine)
-      - traefik.http.routers.pageblanche-http.rule=Host(`${APP_DOMAIN}`)
-      - traefik.http.routers.pageblanche-http.entrypoints=web
-      - traefik.http.services.pageblanche.loadbalancer.server.port=3000
+      - "traefik.enable=true"
+      # IMPORTANT : On utilise le réseau que ton ancien Traefik connaît déjà
+      - "traefik.docker.network=cms-pageblanche_web" 
+      - "traefik.http.routers.pageblanche.rule=Host(`${APP_DOMAIN}`)"
+      - "traefik.http.routers.pageblanche.entrypoints=web" # ou websecure si tu as le SSL
+      - "traefik.http.services.pageblanche.loadbalancer.server.port=3000"
     networks:
       - web
       - internal
 
 volumes:
   mysql_data:
-  traefik_letsencrypt:
 
 networks:
   web:
+    # On laisse Docker créer le réseau, mais ton ancien Traefik devra peut-être y être connecté
+    # ou on utilise le réseau existant de ton portfolio (voir ci-dessous)
   internal:
     internal: true
