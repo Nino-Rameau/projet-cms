@@ -1,0 +1,31 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* PageBlanche - Theme clair */
+    --pb-background: #f8fafc;
+    --pb-foreground: #0f172a;
+    --pb-accent: #2563eb;
+    --pb-border: #dbe4f0;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    /* PageBlanche - Theme sombre doux (pas noir pur) */
+    --pb-background: #111827;
+    --pb-foreground: #e5e7eb;
+    --pb-accent: #60a5fa;
+    --pb-border: #334155;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-pb-background text-pb-foreground border-pb-border;
+    background-image:
+      radial-gradient(circle at 10% 10%, color-mix(in oklab, var(--pb-accent) 18%, transparent) 0%, transparent 35%),
+      radial-gradient(circle at 90% 0%, color-mix(in oklab, var(--pb-foreground) 8%, transparent) 0%, transparent 30%);
+  }
+}

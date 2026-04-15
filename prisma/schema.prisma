@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  password      String?
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  memberships   Member[]
+  pageModifications PageModification[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?  @db.Text
+  access_token       String?  @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?  @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Site {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  domain      String?  @unique
+  description String?
+  language    String   @default("fr")
+  isPublic    Boolean  @default(false)
+  
+  pages       Page[]
+  members     Member[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum PageStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Page {
+  id          String     @id @default(cuid())
+  title       String
+  slug        String
+  status      PageStatus @default(DRAFT)
+  
+  // Arbre de composants (JSON)
+  content     Json       @default("[]")
+  
+  siteId      String
+  site        Site       @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  parentId    String?
+  parent      Page?      @relation("PageHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Page[]     @relation("PageHierarchy")
+  modifications PageModification[]
+
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([siteId, slug]) // Un site ne peut avoir deux pages avec le même slug
+}
+
+model PageModification {
+  id        String   @id @default(cuid())
+  action    String   @default("UPDATE")
+
+  pageId    String
+  page      Page     @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([pageId, createdAt])
+}
+
+enum Role {
+  OWNER
+  EDITOR
+  READER
+}
+
+model Member {
+  id        String   @id @default(cuid())
+  role      Role     @default(EDITOR)
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  siteId    String
+  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, siteId]) // Un utilisateur ne peut avoir qu'un seul rôle par site
+}

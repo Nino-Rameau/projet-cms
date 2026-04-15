@@ -1,0 +1,71 @@
+services:
+  traefik:
+    image: traefik:v3.2
+    container_name: pageblanche-traefik
+    user: root 
+    restart: unless-stopped
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      # On force l'endpoint pour éviter que Traefik ne cherche au mauvais endroit
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+    ports:
+      # On commente le 8080 ici pour le laisser à l'App en local
+      # - "8080:80" 
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_letsencrypt:/letsencrypt
+    networks:
+      - web
+
+  db:
+    image: mysql:8.4
+    container_name: pageblanche-db
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    networks:
+      - internal
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pageblanche-app
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      # --- LA LIGNE DE SAUVETAGE POUR LE LOCAL ---
+      # En local, on accède à l'app DIRECTEMENT sur 8080 sans passer par Traefik
+      - "8080:3000" 
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+      # Config Traefik (utile pour la prod avec ton vrai domaine)
+      - traefik.http.routers.pageblanche-http.rule=Host(`${APP_DOMAIN}`)
+      - traefik.http.routers.pageblanche-http.entrypoints=web
+      - traefik.http.services.pageblanche.loadbalancer.server.port=3000
+    networks:
+      - web
+      - internal
+
+volumes:
+  mysql_data:
+  traefik_letsencrypt:
+
+networks:
+  web:
+  internal:
+    internal: true
