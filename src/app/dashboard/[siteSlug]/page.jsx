@@ -177,9 +177,14 @@ export default async function SiteDashboardLayout({ params, searchParams }) {
           <div className="mt-auto px-2 space-y-3">
             <ThemeToggle compact />
             <Link href={`/dashboard`} className="text-xs text-pb-foreground/60 hover:underline block text-center">← Retour aux sites</Link>
-           <Link href={`/view/${site.slug}/home`} target="_blank" className="flex items-center justify-center gap-2 w-full py-3 bg-pb-foreground text-pb-background rounded-lg text-sm font-semibold hover:opacity-90 shadow-md">
+           <a
+             href={site.domain && site.isPublic ? `https://${site.domain}` : `/view/${site.slug}/home`}
+             target="_blank"
+             rel="noopener noreferrer"
+             className="flex items-center justify-center gap-2 w-full py-3 bg-pb-foreground text-pb-background rounded-lg text-sm font-semibold hover:opacity-90 shadow-md"
+           >
              <ExternalLink size={16} /> Visiter le site
-           </Link>
+           </a>
         </div>
       </aside>
 

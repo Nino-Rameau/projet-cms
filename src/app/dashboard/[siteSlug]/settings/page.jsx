@@ -207,7 +207,7 @@ export default async function SiteSettingsPage({ params, searchParams }) {
             <p className="text-xs text-pb-foreground/60">Ces fichiers sont générés en temps réel selon l'état du site.</p>
             <div className="grid md:grid-cols-2 gap-3">
               <a
-                href={`/view/${site.slug}/robots.txt`}
+                href={site.domain && site.isPublic ? `https://${site.domain}/robots.txt` : `/view/${site.slug}/robots.txt`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-3 py-2 rounded-lg border border-pb-border bg-pb-background/50 text-sm font-mono hover:bg-pb-border/20 transition"
@@ -216,7 +216,7 @@ export default async function SiteSettingsPage({ params, searchParams }) {
                 robots.txt
               </a>
               <a
-                href={`/view/${site.slug}/sitemap.xml`}
+                href={site.domain && site.isPublic ? `https://${site.domain}/sitemap.xml` : `/view/${site.slug}/sitemap.xml`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-3 py-2 rounded-lg border border-pb-border bg-pb-background/50 text-sm font-mono hover:bg-pb-border/20 transition"
