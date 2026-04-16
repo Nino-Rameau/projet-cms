@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Box } from 'lucide-react';
 import { useEditorStore } from '@/store/useEditorStore';
 import ColorPicker from './ColorPicker';
@@ -24,8 +24,15 @@ export default function BlockInspector({
   copySelectedBlock,
   duplicateSelectedBlock,
   pasteCopiedBlock,
+  sitePages = [],
 }) {
   const { updateBlock, deleteBlock, selectBlock, getBlockById, reorderBlocks } = useEditorStore();
+
+  // --- Link picker (texte riche / liste) ---
+  const [linkPicker, setLinkPicker] = useState(null); // null | 'content' | 'list'
+  const [linkType, setLinkType] = useState('external'); // 'external' | 'internal'
+  const [linkValue, setLinkValue] = useState('');
+  const savedRangeRef = useRef(null);
 
   const richEditorRef = useRef(null);
   const listEditorRef = useRef(null);
@@ -142,15 +149,41 @@ export default function BlockInspector({
 
   const applyContentTag = (tagName) => {
     if (!selectedBlock || !richEditorRef.current) return;
-    richEditorRef.current.focus();
-    if (tagName === 'strong') document.execCommand('bold');
-    else if (tagName === 'em') document.execCommand('italic');
-    else if (tagName === 'a') {
-      const url = window.prompt('URL du lien', 'https://');
-      if (!url) return;
-      document.execCommand('createLink', false, url);
+    if (tagName === 'strong') {
+      richEditorRef.current.focus();
+      document.execCommand('bold');
+      updateBlock(selectedBlock.id, { props: { ...selectedBlock.props, content: richEditorRef.current.innerHTML } });
+    } else if (tagName === 'em') {
+      richEditorRef.current.focus();
+      document.execCommand('italic');
+      updateBlock(selectedBlock.id, { props: { ...selectedBlock.props, content: richEditorRef.current.innerHTML } });
+    } else if (tagName === 'a') {
+      const sel = window.getSelection();
+      savedRangeRef.current = sel?.rangeCount > 0 ? sel.getRangeAt(0).cloneRange() : null;
+      setLinkType('external');
+      setLinkValue('');
+      setLinkPicker('content');
     }
-    updateBlock(selectedBlock.id, { props: { ...selectedBlock.props, content: richEditorRef.current.innerHTML } });
+  };
+
+  const applyLinkFromPicker = () => {
+    const href = linkType === 'internal' ? `/${linkValue}` : linkValue;
+    if (!href) { setLinkPicker(null); return; }
+    const target = linkPicker === 'content' ? richEditorRef.current : listEditorRef.current;
+    if (!target) { setLinkPicker(null); return; }
+    target.focus();
+    if (savedRangeRef.current) {
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(savedRangeRef.current);
+    }
+    document.execCommand('createLink', false, href);
+    if (linkPicker === 'content') {
+      updateBlock(selectedBlock.id, { props: { ...selectedBlock.props, content: target.innerHTML } });
+    } else {
+      syncListItemsFromEditor();
+    }
+    setLinkPicker(null);
   };
 
   const syncListItemsFromEditor = () => {
@@ -161,15 +194,21 @@ export default function BlockInspector({
 
   const applyListTag = (tagName) => {
     if (!selectedBlock || selectedBlock.type !== 'UL' || !listEditorRef.current) return;
-    listEditorRef.current.focus();
-    if (tagName === 'strong') document.execCommand('bold');
-    else if (tagName === 'em') document.execCommand('italic');
-    else if (tagName === 'a') {
-      const url = window.prompt('URL du lien', 'https://');
-      if (!url) return;
-      document.execCommand('createLink', false, url);
+    if (tagName === 'strong') {
+      listEditorRef.current.focus();
+      document.execCommand('bold');
+      syncListItemsFromEditor();
+    } else if (tagName === 'em') {
+      listEditorRef.current.focus();
+      document.execCommand('italic');
+      syncListItemsFromEditor();
+    } else if (tagName === 'a') {
+      const sel = window.getSelection();
+      savedRangeRef.current = sel?.rangeCount > 0 ? sel.getRangeAt(0).cloneRange() : null;
+      setLinkType('external');
+      setLinkValue('');
+      setLinkPicker('list');
     }
-    syncListItemsFromEditor();
   };
 
   const addListItem = () => {
@@ -305,10 +344,32 @@ export default function BlockInspector({
                   <div>
                     <label className="block text-xs font-medium text-pb-foreground/70 mb-1">Texte</label>
                     {['Text', 'Paragraph', 'H1', 'H2', 'H3', 'H4', 'Quote'].includes(selectedBlock.type) && (
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        <button type="button" onClick={() => applyContentTag('strong')} className="px-2 py-1 rounded border border-pb-border text-xs">Gras</button>
-                        <button type="button" onClick={() => applyContentTag('em')} className="px-2 py-1 rounded border border-pb-border text-xs">Italique</button>
-                        <button type="button" onClick={() => applyContentTag('a')} className="px-2 py-1 rounded border border-pb-border text-xs">Lien</button>
+                      <div className="mb-2 space-y-2">
+                        <div className="flex flex-wrap gap-2">
+                          <button type="button" onClick={() => applyContentTag('strong')} className="px-2 py-1 rounded border border-pb-border text-xs">Gras</button>
+                          <button type="button" onClick={() => applyContentTag('em')} className="px-2 py-1 rounded border border-pb-border text-xs">Italique</button>
+                          <button type="button" onClick={() => applyContentTag('a')} className="px-2 py-1 rounded border border-pb-border text-xs">Lien</button>
+                        </div>
+                        {linkPicker === 'content' && (
+                          <div className="rounded-lg border border-pb-accent/40 bg-pb-background p-3 space-y-2">
+                            <div className="flex gap-2">
+                              <button type="button" onClick={() => { setLinkType('external'); setLinkValue(''); }} className={`flex-1 px-2 py-1 rounded border text-xs font-semibold transition ${linkType === 'external' ? 'bg-pb-accent text-white border-pb-accent' : 'border-pb-border'}`}>Externe</button>
+                              <button type="button" onClick={() => { setLinkType('internal'); setLinkValue(''); }} className={`flex-1 px-2 py-1 rounded border text-xs font-semibold transition ${linkType === 'internal' ? 'bg-pb-accent text-white border-pb-accent' : 'border-pb-border'}`}>Page du site</button>
+                            </div>
+                            {linkType === 'external' ? (
+                              <input autoFocus type="url" value={linkValue} onChange={(e) => setLinkValue(e.target.value)} placeholder="https://exemple.com" className="w-full bg-pb-background border border-pb-border rounded px-2 py-1 text-xs" onKeyDown={(e) => { if (e.key === 'Enter') applyLinkFromPicker(); if (e.key === 'Escape') setLinkPicker(null); }} />
+                            ) : (
+                              <select value={linkValue} onChange={(e) => setLinkValue(e.target.value)} className="w-full bg-pb-background border border-pb-border rounded px-2 py-1 text-xs">
+                                <option value="">— Choisir une page —</option>
+                                {sitePages.map((p) => <option key={p.slug} value={p.slug}>{p.title} ({p.slug})</option>)}
+                              </select>
+                            )}
+                            <div className="flex gap-2">
+                              <button type="button" onClick={applyLinkFromPicker} className="flex-1 px-2 py-1 rounded bg-pb-accent text-white text-xs font-semibold">Appliquer</button>
+                              <button type="button" onClick={() => setLinkPicker(null)} className="px-2 py-1 rounded border border-pb-border text-xs">Annuler</button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                     {isRichTextBlock ? (
@@ -333,11 +394,33 @@ export default function BlockInspector({
                 {selectedBlock.type === 'UL' && (
                   <div className="space-y-2">
                     <label className="block text-xs font-medium text-pb-foreground/70">Elements de la liste</label>
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      <button type="button" onClick={() => applyListTag('strong')} className="px-2 py-1 rounded border border-pb-border text-xs">Gras</button>
-                      <button type="button" onClick={() => applyListTag('em')} className="px-2 py-1 rounded border border-pb-border text-xs">Italique</button>
-                      <button type="button" onClick={() => applyListTag('a')} className="px-2 py-1 rounded border border-pb-border text-xs">Lien</button>
-                      <button type="button" onClick={addListItem} className="px-2 py-1 rounded border border-pb-border text-xs">+ Element</button>
+                    <div className="space-y-2">
+                      <div className="flex flex-wrap gap-2">
+                        <button type="button" onClick={() => applyListTag('strong')} className="px-2 py-1 rounded border border-pb-border text-xs">Gras</button>
+                        <button type="button" onClick={() => applyListTag('em')} className="px-2 py-1 rounded border border-pb-border text-xs">Italique</button>
+                        <button type="button" onClick={() => applyListTag('a')} className="px-2 py-1 rounded border border-pb-border text-xs">Lien</button>
+                        <button type="button" onClick={addListItem} className="px-2 py-1 rounded border border-pb-border text-xs">+ Element</button>
+                      </div>
+                      {linkPicker === 'list' && (
+                        <div className="rounded-lg border border-pb-accent/40 bg-pb-background p-3 space-y-2">
+                          <div className="flex gap-2">
+                            <button type="button" onClick={() => { setLinkType('external'); setLinkValue(''); }} className={`flex-1 px-2 py-1 rounded border text-xs font-semibold transition ${linkType === 'external' ? 'bg-pb-accent text-white border-pb-accent' : 'border-pb-border'}`}>Externe</button>
+                            <button type="button" onClick={() => { setLinkType('internal'); setLinkValue(''); }} className={`flex-1 px-2 py-1 rounded border text-xs font-semibold transition ${linkType === 'internal' ? 'bg-pb-accent text-white border-pb-accent' : 'border-pb-border'}`}>Page du site</button>
+                          </div>
+                          {linkType === 'external' ? (
+                            <input autoFocus type="url" value={linkValue} onChange={(e) => setLinkValue(e.target.value)} placeholder="https://exemple.com" className="w-full bg-pb-background border border-pb-border rounded px-2 py-1 text-xs" onKeyDown={(e) => { if (e.key === 'Enter') applyLinkFromPicker(); if (e.key === 'Escape') setLinkPicker(null); }} />
+                          ) : (
+                            <select value={linkValue} onChange={(e) => setLinkValue(e.target.value)} className="w-full bg-pb-background border border-pb-border rounded px-2 py-1 text-xs">
+                              <option value="">— Choisir une page —</option>
+                              {sitePages.map((p) => <option key={p.slug} value={p.slug}>{p.title} ({p.slug})</option>)}
+                            </select>
+                          )}
+                          <div className="flex gap-2">
+                            <button type="button" onClick={applyLinkFromPicker} className="flex-1 px-2 py-1 rounded bg-pb-accent text-white text-xs font-semibold">Appliquer</button>
+                            <button type="button" onClick={() => setLinkPicker(null)} className="px-2 py-1 rounded border border-pb-border text-xs">Annuler</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <div ref={listEditorRef} contentEditable suppressContentEditableWarning onInput={syncListItemsFromEditor} className="w-full min-h-[180px] max-h-[420px] overflow-y-auto bg-pb-background border border-pb-border rounded-lg px-3 py-2 text-sm leading-relaxed outline-none [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-2 [&_a]:underline [&_a]:underline-offset-2" />
                   </div>
@@ -366,8 +449,20 @@ export default function BlockInspector({
                     {selectedBlock.props?.actionType === 'link' && <input type="text" value={selectedBlock.props?.href || ''} onChange={(e) => updateBlock(selectedBlock.id, { props: { ...selectedBlock.props, href: e.target.value } })} placeholder="https://exemple.com" className="w-full bg-pb-background border border-pb-border rounded-lg px-3 py-2 text-sm" />}
                     {selectedBlock.props?.actionType === 'page' && (
                       <div>
-                        <input type="text" value={selectedBlock.props?.pagePath || ''} onChange={(e) => updateBlock(selectedBlock.id, { props: { ...selectedBlock.props, pagePath: normalizeSiteRelativePath(e.target.value) } })} placeholder="contact ou /contact" className="w-full bg-pb-background border border-pb-border rounded-lg px-3 py-2 text-sm" />
-                        <p className="text-[11px] text-pb-foreground/60 mt-1">Chemin interne au site seulement.</p>
+                        {sitePages.length > 0 ? (
+                          <select
+                            value={selectedBlock.props?.pagePath || ''}
+                            onChange={(e) => updateBlock(selectedBlock.id, { props: { ...selectedBlock.props, pagePath: e.target.value } })}
+                            className="w-full bg-pb-background border border-pb-border rounded-lg px-3 py-2 text-sm"
+                          >
+                            <option value="">— Choisir une page —</option>
+                            {sitePages.map((p) => (
+                              <option key={p.slug} value={p.slug}>{p.title} ({p.slug})</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input type="text" value={selectedBlock.props?.pagePath || ''} onChange={(e) => updateBlock(selectedBlock.id, { props: { ...selectedBlock.props, pagePath: normalizeSiteRelativePath(e.target.value) } })} placeholder="contact ou /contact" className="w-full bg-pb-background border border-pb-border rounded-lg px-3 py-2 text-sm" />
+                        )}
                       </div>
                     )}
                     {selectedBlock.props?.actionType === 'file' && <input type="text" value={selectedBlock.props?.fileUrl || ''} onChange={(e) => updateBlock(selectedBlock.id, { props: { ...selectedBlock.props, fileUrl: e.target.value } })} placeholder="https://monsite.com/guide.pdf" className="w-full bg-pb-background border border-pb-border rounded-lg px-3 py-2 text-sm" />}

@@ -15,7 +15,7 @@ import {
 } from '@/components/editor/editorUtils.jsx';
 import { PAGE_SETTINGS_DEFAULTS, BLOCK_CLIPBOARD_STORAGE_KEY } from '@/components/editor/editorConstants';
 
-export default function EditorClient({ siteSlug, pagePath, pageId, initialBlocks, initialPageSettings }) {
+export default function EditorClient({ siteSlug, pagePath, pageId, initialBlocks, initialPageSettings, sitePages }) {
   const [isMounted, setIsMounted] = useState(false);
   const [activeId, setActiveId] = useState(null);
   const [isPending, startTransition] = useTransition();
@@ -311,6 +311,7 @@ export default function EditorClient({ siteSlug, pagePath, pageId, initialBlocks
             copySelectedBlock={copySelectedBlock}
             duplicateSelectedBlock={duplicateSelectedBlock}
             pasteCopiedBlock={pasteCopiedBlock}
+            sitePages={sitePages || []}
           />
         </main>
 

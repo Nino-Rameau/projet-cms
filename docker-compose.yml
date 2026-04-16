@@ -34,7 +34,7 @@ services:
       PROD_DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@cms-db:3306/pageblanche
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       NEXTAUTH_URL: https://${CMS_DOMAIN}
-      APP_DOMAIN: ${CMS_DOMAIN}
+      CMS_DOMAIN: ${CMS_DOMAIN}
     networks:
       - traefik
       - cms_internal

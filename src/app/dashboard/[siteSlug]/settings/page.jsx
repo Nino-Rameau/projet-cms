@@ -199,6 +199,40 @@ export default async function SiteSettingsPage({ params, searchParams }) {
           )}
         </form>
 
+        {site.domain && site.isPublic && (
+          <section className="mt-6 rounded-xl border border-emerald-300 bg-emerald-50/60 p-5 space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <h3 className="text-sm font-bold text-emerald-800">Déploiement actif — {site.domain}</h3>
+            </div>
+            <p className="text-sm text-emerald-800/80">
+              Votre site est en ligne. Pour qu'il soit accessible via <strong>{site.domain}</strong>, faites pointer ce domaine vers l'IP de votre VPS en ajoutant un enregistrement DNS de type <strong>A</strong>.
+            </p>
+            <div className="rounded-lg bg-white border border-emerald-200 px-4 py-3 font-mono text-sm text-slate-700 space-y-1">
+              <p><span className="text-emerald-700 font-bold">Type :</span> A</p>
+              <p><span className="text-emerald-700 font-bold">Nom :</span> @ (ou {site.domain})</p>
+              <p><span className="text-emerald-700 font-bold">Valeur :</span> {process.env.NEXT_PUBLIC_VPS_IP || '<IP de votre VPS>'}</p>
+              <p><span className="text-emerald-700 font-bold">TTL :</span> 3600 (ou Auto)</p>
+            </div>
+            <a
+              href={`http://${site.domain}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 hover:underline"
+            >
+              <ExternalLink size={14} /> Tester {site.domain}
+            </a>
+          </section>
+        )}
+
+        {site.domain && !site.isPublic && (
+          <section className="mt-6 rounded-xl border border-amber-300 bg-amber-50/60 p-5">
+            <p className="text-sm text-amber-800">
+              Le domaine <strong>{site.domain}</strong> est configuré mais le site est en mode privé. Activez "Site en ligne publiquement" pour le déployer.
+            </p>
+          </section>
+        )}
+
         {canEdit && (
           <section className="mt-8 rounded-xl border border-red-300 bg-red-50/60 p-5 space-y-4">
             <h3 className="text-sm font-bold text-red-700">Zone dangereuse</h3>

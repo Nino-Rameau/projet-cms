@@ -77,7 +77,7 @@ git clone <url-du-depot> .
 
 2. Remplir le fichier `.env` avec les valeurs de production :
 ```text
-APP_DOMAIN=domaine-du-cms.com
+CMS_DOMAIN=domaine-du-cms.com
 PROD_DATABASE_URL=mysql://user:pass@db:3306/db_name
 NEXTAUTH_SECRET=votre-secret-long
 ```

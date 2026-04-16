@@ -13,7 +13,7 @@ export default function middleware(req, event) {
   // 1. Logique Domaine Custom
   const hostname = req.headers.get("host") || "";
   const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1") || hostname.includes(":3000") || hostname.includes(":8080");
-  const appDomain = process.env.APP_DOMAIN || "localhost";
+  const appDomain = process.env.CMS_DOMAIN || "localhost";
   const isAppDomain = hostname === appDomain || hostname.endsWith(`.${appDomain}`);
 
   if (!isLocalhost && !isAppDomain && !url.pathname.startsWith('/view') && !url.pathname.startsWith('/domain') && !url.pathname.startsWith('/api') && !url.pathname.startsWith('/_next') && url.pathname !== '/favicon.ico') {

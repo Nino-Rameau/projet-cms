@@ -111,7 +111,7 @@ export default function BlockRenderer({ block, siteSlug = '', isCustomDomain = f
     return html.replace(/href=["']([^"']+)["']/gi, (match, url) => {
       let finalUrl = url;
       // Normaliser le lien s'il commence par / ou par le l'URL courante pointant en interne
-      if (finalUrl.startsWith('http://localhost') || (typeof process !== 'undefined' && process.env.APP_DOMAIN && finalUrl.startsWith('https://' + process.env.APP_DOMAIN))) {
+      if (finalUrl.startsWith('http://localhost') || (typeof process !== 'undefined' && process.env.CMS_DOMAIN && finalUrl.startsWith('https://' + process.env.CMS_DOMAIN))) {
         try {
           const urlObj = new URL(finalUrl);
           finalUrl = urlObj.pathname;

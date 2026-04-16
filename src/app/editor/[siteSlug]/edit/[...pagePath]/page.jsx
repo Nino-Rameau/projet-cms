@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
 import EditorClient from "./EditorClient";
 
+const GLOBAL_SLUGS = ['__global-header', '__global-footer'];
+
 export default async function EditorPage({ params }) {
   const session = await getServerSession(authOptions);
   if (!session) return redirect("/dashboard");
@@ -14,7 +16,7 @@ export default async function EditorPage({ params }) {
   const pageSlug = pagePath[pagePath.length - 1];
 
   const membership = await prisma.member.findFirst({
-    where: { 
+    where: {
       userId: session.user.id,
       site: { slug: siteSlug }
     },
@@ -26,18 +28,24 @@ export default async function EditorPage({ params }) {
   if (!membership) return redirect("/dashboard");
   if (membership.role === 'READER') return redirect(`/dashboard/${siteSlug}`);
 
-  const page = await prisma.page.findUnique({
-    where: {
-      siteId_slug: {
-        siteId: membership.site.id,
-        slug: pageSlug,
+  const [page, sitePages] = await Promise.all([
+    prisma.page.findUnique({
+      where: {
+        siteId_slug: {
+          siteId: membership.site.id,
+          slug: pageSlug,
+        },
       },
-    },
-  });
+    }),
+    prisma.page.findMany({
+      where: { siteId: membership.site.id, slug: { notIn: GLOBAL_SLUGS } },
+      select: { slug: true, title: true },
+      orderBy: { title: 'asc' },
+    }),
+  ]);
 
   if (!page) return notFound();
 
-  // On parse les blocs et les paramètres de page côté client (rétrocompatible)
   let initialBlocks = [];
   let initialPageSettings = {};
   try {
@@ -58,12 +66,13 @@ export default async function EditorPage({ params }) {
   }
 
   return (
-    <EditorClient 
-      siteSlug={siteSlug} 
-      pagePath={pagePath} 
-      pageId={page.id} 
-      initialBlocks={initialBlocks} 
+    <EditorClient
+      siteSlug={siteSlug}
+      pagePath={pagePath}
+      pageId={page.id}
+      initialBlocks={initialBlocks}
       initialPageSettings={initialPageSettings}
+      sitePages={sitePages}
     />
   );
 }
