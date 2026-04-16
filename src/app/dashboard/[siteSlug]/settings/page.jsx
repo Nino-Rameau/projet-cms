@@ -187,6 +187,43 @@ export default async function SiteSettingsPage({ params, searchParams }) {
                   </span>
                 </label>
               </div>
+
+              <div className="rounded-lg border border-amber-300 bg-amber-50/60 p-3">
+                <label className="inline-flex items-start gap-3">
+                  <input type="checkbox" name="noIndex" defaultChecked={Boolean(site.noIndex)} disabled={!canEdit} className="mt-1" />
+                  <span>
+                    <span className="block text-sm font-semibold text-amber-800">Bloquer l'indexation (noindex)</span>
+                    <span className="block text-xs text-amber-700/80">
+                      Interdit aux moteurs de recherche d'indexer ce site. Génère un <code className="font-mono bg-amber-100 px-1 rounded">robots.txt</code> bloquant et retire le site du sitemap.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-pb-border bg-pb-background/70 p-5 space-y-3">
+            <h3 className="text-sm font-bold">SEO — Fichiers générés automatiquement</h3>
+            <p className="text-xs text-pb-foreground/60">Ces fichiers sont générés en temps réel selon l'état du site.</p>
+            <div className="grid md:grid-cols-2 gap-3">
+              <a
+                href={`/view/${site.slug}/robots.txt`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-pb-border bg-pb-background/50 text-sm font-mono hover:bg-pb-border/20 transition"
+              >
+                <ExternalLink size={13} className="shrink-0" />
+                robots.txt
+              </a>
+              <a
+                href={`/view/${site.slug}/sitemap.xml`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-pb-border bg-pb-background/50 text-sm font-mono hover:bg-pb-border/20 transition"
+              >
+                <ExternalLink size={13} className="shrink-0" />
+                sitemap.xml
+              </a>
             </div>
           </section>
 

@@ -57,6 +57,7 @@ model Site {
   description String?
   language    String   @default("fr")
   isPublic    Boolean  @default(false)
+  noIndex     Boolean  @default(false)
 
   pages       Page[]
   members     Member[]

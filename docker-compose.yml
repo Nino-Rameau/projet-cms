@@ -37,6 +37,11 @@ services:
       CMS_DOMAIN: ${CMS_DOMAIN}
       APP_DOMAIN: ${CMS_DOMAIN}
       NEXT_PUBLIC_VPS_IP: ${NEXT_PUBLIC_VPS_IP}
+      # Chemin vers le dossier dynamic de Traefik (file provider)
+      TRAEFIK_DYNAMIC_DIR: /traefik-dynamic
+    volumes:
+      # Volume partagé avec Traefik pour les configs de domaines customs
+      - traefik_dynamic:/traefik-dynamic
     networks:
       - traefik
       - cms_internal
@@ -62,15 +67,8 @@ services:
       - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
       - "traefik.http.middlewares.https-redirect.redirectscheme.permanent=true"
 
-      # ─── Catch-all HTTPS pour les domaines personnalisés ─────────
-      # Traefik génère automatiquement un cert Let's Encrypt par domaine
-      - "traefik.http.routers.cms-custom.rule=HostRegexp(`{host:.+}`)"
-      - "traefik.http.routers.cms-custom.entrypoints=websecure"
-      - "traefik.http.routers.cms-custom.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.cms-custom.service=cms"
-      - "traefik.http.routers.cms-custom.priority=1"
-
       # ─── Catch-all HTTP pour les domaines personnalisés ──────────
+      # (HTTPS géré par le file provider — voir TRAEFIK_DYNAMIC_DIR)
       - "traefik.http.routers.cms-custom-http.rule=HostRegexp(`{host:.+}`)"
       - "traefik.http.routers.cms-custom-http.entrypoints=web"
       - "traefik.http.routers.cms-custom-http.service=cms"
@@ -78,6 +76,7 @@ services:
 
 volumes:
   cms_db_data:
+  traefik_dynamic:
 
 networks:
   traefik:

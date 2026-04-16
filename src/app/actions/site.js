@@ -5,6 +5,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { validateOrigin } from "@/lib/validateOrigin";
+import { registerDomain, unregisterDomain } from "@/lib/traefikDomain";
 
 const GLOBAL_HEADER_SLUG = "__global-header";
 const GLOBAL_FOOTER_SLUG = "__global-footer";
@@ -567,8 +568,13 @@ export async function updateSiteSettings(formData) {
     const domainRaw = String(formData.get("domain") || "").trim();
     const languageRaw = String(formData.get("language") || "fr").trim().toLowerCase();
     const isPublic = formData.get("isPublic") === "on";
+    const noIndex = formData.get("noIndex") === "on";
 
     await requireEditableMembership(siteId, session.user.id);
+
+    // Récupère l'ancien domaine pour pouvoir supprimer son fichier si changé
+    const existing = await prisma.site.findUnique({ where: { id: siteId }, select: { domain: true } });
+    const oldDomain = existing?.domain || null;
 
     const allowedLanguages = new Set(["fr", "en", "es", "de", "it", "pt"]);
     const language = allowedLanguages.has(languageRaw) ? languageRaw : "fr";
@@ -581,8 +587,13 @@ export async function updateSiteSettings(formData) {
         domain: domainRaw || null,
         language,
         isPublic,
+        noIndex,
       },
     });
+
+    // Mise à jour du file provider Traefik pour le cert HTTPS
+    if (oldDomain && oldDomain !== domainRaw) await unregisterDomain(oldDomain);
+    if (domainRaw) await registerDomain(domainRaw);
 
     redirectWithParams(settingsPath, { settingsSuccess: "updated" });
   } catch (error) {
@@ -604,9 +615,9 @@ export async function deleteSite(formData) {
 
     await requireOwnerMembership(siteId, session.user.id);
 
-    await prisma.site.delete({
-      where: { id: siteId },
-    });
+    const siteToDelete = await prisma.site.findUnique({ where: { id: siteId }, select: { domain: true } });
+    await prisma.site.delete({ where: { id: siteId } });
+    if (siteToDelete?.domain) await unregisterDomain(siteToDelete.domain);
 
     redirectWithParams("/dashboard", { success: "site_deleted" });
   } catch (error) {
