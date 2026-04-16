@@ -19,16 +19,26 @@ http:
         - websecure
       tls:
         certResolver: letsencrypt
-      service: cms@docker
+      service: cms-svc-${name}
       priority: 5
     cms-domain-${name}-http:
       rule: "Host(\`${domain}\`)"
       entryPoints:
         - web
       middlewares:
-        - https-redirect@docker
-      service: cms@docker
+        - cms-https-redirect-${name}
+      service: cms-svc-${name}
       priority: 5
+  middlewares:
+    cms-https-redirect-${name}:
+      redirectScheme:
+        scheme: https
+        permanent: true
+  services:
+    cms-svc-${name}:
+      loadBalancer:
+        servers:
+          - url: "http://cms:3000"
 `;
 }
 
