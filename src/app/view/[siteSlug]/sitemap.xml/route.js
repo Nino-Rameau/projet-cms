@@ -8,6 +8,8 @@ function toW3CDate(date) {
   return new Date(date).toISOString().split('T')[0];
 }
 
+const EMPTY_SITEMAP = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>';
+
 export async function GET(req, { params }) {
   const { siteSlug } = await params;
 
@@ -24,16 +26,19 @@ export async function GET(req, { params }) {
     },
   });
 
-  if (!site || !site.isPublic || site.noIndex) {
-    return new Response('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>', {
+  const isPublic = site?.isPublic === true || site?.isPublic === 1;
+  const noIndex = site?.noIndex === true || site?.noIndex === 1;
+
+  if (!site || !isPublic || noIndex) {
+    return new Response(EMPTY_SITEMAP, {
       status: 404,
       headers: { 'Content-Type': 'application/xml; charset=utf-8' },
     });
   }
 
-  const publishedPages = site.pages.filter(p => p.status === 'PUBLISHED');
+  const publishedPages = site.pages.filter(p => String(p.status).toUpperCase() === 'PUBLISHED');
+
   const appDomain = process.env.CMS_DOMAIN || req.headers.get('host') || 'localhost';
-  const base = site.domain ? `https://${site.domain}` : `https://${appDomain}/view/${siteSlug}`;
 
   const urls = publishedPages.map((page) => {
     const loc = site.domain

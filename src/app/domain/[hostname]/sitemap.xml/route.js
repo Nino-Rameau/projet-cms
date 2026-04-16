@@ -8,6 +8,8 @@ function toW3CDate(date) {
   return new Date(date).toISOString().split('T')[0];
 }
 
+const EMPTY_SITEMAP = '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>';
+
 export async function GET(req, { params }) {
   const { hostname } = await params;
 
@@ -24,14 +26,24 @@ export async function GET(req, { params }) {
     },
   });
 
-  if (!site || !site.isPublic || site.noIndex) {
-    return new Response('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>', {
+  // Normalise les booléens (MariaDB adapter peut retourner 0/1)
+  const isPublic = site?.isPublic === true || site?.isPublic === 1;
+  const noIndex = site?.noIndex === true || site?.noIndex === 1;
+
+  console.log(`[sitemap] ${hostname} — site: ${!!site}, isPublic: ${site?.isPublic} (${isPublic}), noIndex: ${site?.noIndex} (${noIndex}), pages: ${site?.pages?.length ?? 0}`);
+
+  if (!site || !isPublic || noIndex) {
+    return new Response(EMPTY_SITEMAP, {
       status: 404,
       headers: { 'Content-Type': 'application/xml; charset=utf-8' },
     });
   }
 
-  const publishedPages = site.pages.filter(p => p.status === 'PUBLISHED');
+  // Filtre côté JS — le driver MariaDB peut retourner l'enum différemment
+  const publishedPages = site.pages.filter(p => String(p.status).toUpperCase() === 'PUBLISHED');
+
+  console.log(`[sitemap] ${hostname} — published pages: ${publishedPages.length} / ${site.pages.length} total`, site.pages.map(p => `${p.slug}:${p.status}`));
+
   const base = `https://${hostname}`;
 
   const urls = publishedPages.map((page) => {
