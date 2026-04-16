@@ -18,8 +18,8 @@ export async function GET(req, { params }) {
       noIndex: true,
       updatedAt: true,
       pages: {
-        where: { status: 'PUBLISHED', slug: { notIn: GLOBAL_SLUGS } },
-        select: { slug: true, updatedAt: true },
+        where: { slug: { notIn: GLOBAL_SLUGS } },
+        select: { slug: true, updatedAt: true, status: true },
       },
     },
   });
@@ -31,9 +31,10 @@ export async function GET(req, { params }) {
     });
   }
 
+  const publishedPages = site.pages.filter(p => p.status === 'PUBLISHED');
   const base = `https://${hostname}`;
 
-  const urls = site.pages.map((page) => {
+  const urls = publishedPages.map((page) => {
     const loc = page.slug === 'home' ? base + '/' : `${base}/${page.slug}`;
     return `  <url>\n    <loc>${loc}</loc>\n    <lastmod>${toW3CDate(page.updatedAt)}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>${page.slug === 'home' ? '1.0' : '0.8'}</priority>\n  </url>`;
   });

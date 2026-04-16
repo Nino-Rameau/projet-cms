@@ -18,8 +18,8 @@ export async function GET(req, { params }) {
       noIndex: true,
       domain: true,
       pages: {
-        where: { status: 'PUBLISHED', slug: { notIn: GLOBAL_SLUGS } },
-        select: { slug: true, updatedAt: true },
+        where: { slug: { notIn: GLOBAL_SLUGS } },
+        select: { slug: true, updatedAt: true, status: true },
       },
     },
   });
@@ -31,10 +31,11 @@ export async function GET(req, { params }) {
     });
   }
 
+  const publishedPages = site.pages.filter(p => p.status === 'PUBLISHED');
   const appDomain = process.env.CMS_DOMAIN || req.headers.get('host') || 'localhost';
   const base = site.domain ? `https://${site.domain}` : `https://${appDomain}/view/${siteSlug}`;
 
-  const urls = site.pages.map((page) => {
+  const urls = publishedPages.map((page) => {
     const loc = site.domain
       ? (page.slug === 'home' ? `https://${site.domain}/` : `https://${site.domain}/${page.slug}`)
       : `https://${appDomain}/view/${siteSlug}/${page.slug}`;
