@@ -40,8 +40,8 @@ services:
       # Chemin vers le dossier dynamic de Traefik (file provider)
       TRAEFIK_DYNAMIC_DIR: /traefik-dynamic
     volumes:
-      # Volume partagé avec Traefik pour les configs de domaines customs
-      - traefik_dynamic:/traefik-dynamic
+      # Bind mount vers le dossier dynamic de Traefik (même chemin que Traefik lit)
+      - /home/debian/docker/traefik/dynamic:/traefik-dynamic
     networks:
       - traefik
       - cms_internal
@@ -76,7 +76,6 @@ services:
 
 volumes:
   cms_db_data:
-  traefik_dynamic:
 
 networks:
   traefik:
