@@ -94,9 +94,14 @@ export default async function SiteSettingsPage({ params, searchParams }) {
         <div className="px-2 mt-auto space-y-3">
           <ThemeToggle compact />
           <Link href="/dashboard" className="block text-xs text-center text-pb-foreground/60 hover:underline">← Retour aux sites</Link>
-          <Link href={`/view/${site.slug}/home`} target="_blank" className="flex items-center justify-center w-full gap-2 py-3 text-sm font-semibold rounded-lg shadow-md bg-pb-foreground text-pb-background hover:opacity-90">
-            <ExternalLink size={16} /> Visiter le site
-          </Link>
+          <a
+             href={site.domain && site.isPublic ? `https://${site.domain}` : `/view/${site.slug}/home`}
+             target="_blank"
+             rel="noopener noreferrer"
+             className="flex items-center justify-center w-full gap-2 py-3 text-sm font-semibold rounded-lg shadow-md bg-pb-foreground text-pb-background hover:opacity-90"
+           >
+             <ExternalLink size={16} /> Visiter le site
+           </a>
         </div>
       </aside>
 

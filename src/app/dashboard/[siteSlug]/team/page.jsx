@@ -85,10 +85,10 @@ export default async function SiteTeamPage({ params, searchParams }) {
   };
 
   return (
-    <div className="min-h-screen bg-pb-background text-pb-foreground flex flex-row font-sans">
-      <aside className="w-64 border-r border-pb-border bg-pb-background/70 backdrop-blur-sm flex flex-col h-screen sticky top-0 px-4 py-8">
-        <div className="flex items-center gap-3 mb-10 px-2 py-1">
-          <div className="w-10 h-10 bg-pb-accent rounded-lg flex items-center justify-center text-white font-bold text-xl uppercase shadow-lg">
+    <div className="flex flex-row min-h-screen font-sans bg-pb-background text-pb-foreground">
+      <aside className="sticky top-0 flex flex-col w-64 h-screen px-4 py-8 border-r border-pb-border bg-pb-background/70 backdrop-blur-sm">
+        <div className="flex items-center gap-3 px-2 py-1 mb-10">
+          <div className="flex items-center justify-center w-10 h-10 text-xl font-bold text-white uppercase rounded-lg shadow-lg bg-pb-accent">
             {site.name.charAt(0)}
           </div>
           <div>
@@ -100,74 +100,79 @@ export default async function SiteTeamPage({ params, searchParams }) {
         <nav className="flex-1 space-y-2">
           <Link href={`/dashboard/${site.slug}`} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-pb-border/40 text-pb-foreground/70 hover:text-pb-foreground font-medium group transition-all">
             <div className="flex items-center gap-3"><LayoutDashboard size={18} /> Pages</div>
-            <ChevronRight size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+            <ChevronRight size={16} className="transition-opacity opacity-0 group-hover:opacity-100" />
           </Link>
           <Link href={`/dashboard/${site.slug}/settings`} className="flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-pb-border/40 text-pb-foreground/70 hover:text-pb-foreground font-medium group transition-all">
             <div className="flex items-center gap-3"><Settings size={18} /> Paramètres Site</div>
-            <ChevronRight size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+            <ChevronRight size={16} className="transition-opacity opacity-0 group-hover:opacity-100" />
           </Link>
           <Link href={`/dashboard/${site.slug}/team`} className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-pb-accent/10 text-pb-accent font-medium group transition-all">
             <div className="flex items-center gap-3"><Users size={18} /> Équipe (Membres)</div>
-            <ChevronRight size={16} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+            <ChevronRight size={16} className="transition-opacity opacity-0 group-hover:opacity-100" />
           </Link>
         </nav>
 
-        <div className="mt-auto px-2 space-y-3">
+        <div className="px-2 mt-auto space-y-3">
           <ThemeToggle compact />
-          <Link href="/dashboard" className="text-xs text-pb-foreground/60 hover:underline block text-center">← Retour aux sites</Link>
-          <Link href={`/view/${site.slug}/home`} target="_blank" className="flex items-center justify-center gap-2 w-full py-3 bg-pb-foreground text-pb-background rounded-lg text-sm font-semibold hover:opacity-90 shadow-md">
-            <ExternalLink size={16} /> Visiter le site
-          </Link>
+          <Link href="/dashboard" className="block text-xs text-center text-pb-foreground/60 hover:underline">← Retour aux sites</Link>
+          <a
+             href={site.domain && site.isPublic ? `https://${site.domain}` : `/view/${site.slug}/home`}
+             target="_blank"
+             rel="noopener noreferrer"
+             className="flex items-center justify-center w-full gap-2 py-3 text-sm font-semibold rounded-lg shadow-md bg-pb-foreground text-pb-background hover:opacity-90"
+           >
+             <ExternalLink size={16} /> Visiter le site
+           </a>
         </div>
       </aside>
 
-      <main className="flex-1 overflow-y-auto p-8 md:p-12 max-w-5xl">
-        <header className="mb-8 pb-4 border-b border-pb-border">
-          <Link href={`/dashboard/${site.slug}`} className="inline-flex items-center text-xs font-semibold text-pb-foreground/60 hover:text-pb-accent mb-3">← Retour à l'architecture</Link>
-          <h2 className="text-3xl font-extrabold tracking-tight mb-1">Équipe du site</h2>
+      <main className="flex-1 max-w-5xl p-8 overflow-y-auto md:p-12">
+        <header className="pb-4 mb-8 border-b border-pb-border">
+          <Link href={`/dashboard/${site.slug}`} className="inline-flex items-center mb-3 text-xs font-semibold text-pb-foreground/60 hover:text-pb-accent">← Retour à l'architecture</Link>
+          <h2 className="mb-1 text-3xl font-extrabold tracking-tight">Équipe du site</h2>
           <p className="text-pb-foreground/60">Gérez les membres et leurs rôles d'accès.</p>
         </header>
 
         {teamErrorMessage && (
-          <div className="mb-6 rounded-lg border border-red-300 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-700">
+          <div className="px-4 py-3 mb-6 text-sm font-medium text-red-700 border border-red-300 rounded-lg bg-red-500/10">
             {teamErrorMessage}
           </div>
         )}
 
         {teamSuccessMessage && (
-          <div className="mb-6 rounded-lg border border-emerald-300 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-700">
+          <div className="px-4 py-3 mb-6 text-sm font-medium border rounded-lg border-emerald-300 bg-emerald-500/10 text-emerald-700">
             {teamSuccessMessage}
           </div>
         )}
 
-        <section className="rounded-xl border border-pb-border bg-pb-background/70 p-5 mb-6">
-          <h3 className="text-sm font-bold mb-3">Inviter un membre</h3>
+        <section className="p-5 mb-6 border rounded-xl border-pb-border bg-pb-background/70">
+          <h3 className="mb-3 text-sm font-bold">Inviter un membre</h3>
           {isOwner ? (
-            <form action={inviteSiteMember} className="grid md:grid-cols-4 gap-3 items-end">
+            <form action={inviteSiteMember} className="grid items-end gap-3 md:grid-cols-4">
               <input type="hidden" name="siteId" value={site.id} />
               <input type="hidden" name="siteSlug" value={site.slug} />
 
               <div className="md:col-span-2">
-                <label className="block text-xs font-semibold text-pb-foreground/70 mb-1">Email du compte existant</label>
+                <label className="block mb-1 text-xs font-semibold text-pb-foreground/70">Email du compte existant</label>
                 <input
                   name="email"
                   type="email"
                   required
                   placeholder="membre@exemple.com"
-                  className="w-full px-3 py-2 border border-pb-border rounded-lg bg-pb-background"
+                  className="w-full px-3 py-2 border rounded-lg border-pb-border bg-pb-background"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-pb-foreground/70 mb-1">Rôle</label>
-                <select name="role" defaultValue="EDITOR" className="w-full px-3 py-2 border border-pb-border rounded-lg bg-pb-background">
+                <label className="block mb-1 text-xs font-semibold text-pb-foreground/70">Rôle</label>
+                <select name="role" defaultValue="EDITOR" className="w-full px-3 py-2 border rounded-lg border-pb-border bg-pb-background">
                   <option value="EDITOR">Éditeur</option>
                   <option value="READER">Lecteur</option>
                   <option value="OWNER">Propriétaire</option>
                 </select>
               </div>
 
-              <button type="submit" className="px-4 py-2 rounded-lg bg-pb-accent text-white font-semibold hover:brightness-110 transition">
+              <button type="submit" className="px-4 py-2 font-semibold text-white transition rounded-lg bg-pb-accent hover:brightness-110">
                 Inviter
               </button>
             </form>
@@ -176,8 +181,8 @@ export default async function SiteTeamPage({ params, searchParams }) {
           )}
         </section>
 
-        <section className="rounded-xl border border-pb-border bg-pb-background overflow-hidden">
-          <div className="grid grid-cols-12 px-5 py-3 bg-pb-border/20 border-b border-pb-border text-xs font-semibold text-pb-foreground/60 uppercase tracking-wider">
+        <section className="overflow-hidden border rounded-xl border-pb-border bg-pb-background">
+          <div className="grid grid-cols-12 px-5 py-3 text-xs font-semibold tracking-wider uppercase border-b bg-pb-border/20 border-pb-border text-pb-foreground/60">
             <div className="col-span-5">Membre</div>
             <div className="col-span-3">Rôle</div>
             <div className="col-span-4 text-right">Actions</div>
@@ -189,10 +194,10 @@ export default async function SiteTeamPage({ params, searchParams }) {
               const canEdit = isOwner && !isCurrentUser;
 
               return (
-                <div key={m.id} className="grid grid-cols-12 px-5 py-4 items-center">
+                <div key={m.id} className="grid items-center grid-cols-12 px-5 py-4">
                   <div className="col-span-5 pr-3">
                     <div className="font-semibold truncate">{m.user?.name || m.user?.email || 'Utilisateur'}</div>
-                    <div className="text-xs text-pb-foreground/60 truncate">{m.user?.email || 'email non disponible'}</div>
+                    <div className="text-xs truncate text-pb-foreground/60">{m.user?.email || 'email non disponible'}</div>
                   </div>
 
                   <div className="col-span-3">
@@ -201,7 +206,7 @@ export default async function SiteTeamPage({ params, searchParams }) {
                     </span>
                   </div>
 
-                  <div className="col-span-4 flex items-center justify-end gap-2">
+                  <div className="flex items-center justify-end col-span-4 gap-2">
                     {canEdit ? (
                       <>
                         <form action={updateSiteMemberRole}>
