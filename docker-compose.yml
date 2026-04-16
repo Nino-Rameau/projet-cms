@@ -1,57 +1,56 @@
 services:
-  db:
-    image: mysql:8.4
-    container_name: pageblanche-db
+
+  # ─── Base de données MariaDB ─────────────────────────────────────
+  cms-db:
+    image: mariadb:11
+    container_name: cms-db
     restart: unless-stopped
-    command: --mysql-native-password=ON
-    env_file: .env
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_DATABASE: pageblanche
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
-      - mysql_data:/var/lib/mysql
+      - cms_db_data:/var/lib/mysql
     networks:
-      - traefik_externe
-      - internal
+      - cms_internal
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 30s
       interval: 10s
       timeout: 5s
       retries: 5
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: pageblanche-app
+  # ─── Application Next.js ─────────────────────────────────────────
+  cms:
+    build: .
+    container_name: cms
     restart: unless-stopped
-    env_file: .env
     depends_on:
-      db:
+      cms-db:
         condition: service_healthy
-    ports:
-      - "8080:3000"
+    environment:
+      NODE_ENV: production
+      PROD_DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@cms-db:3306/pageblanche
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      NEXTAUTH_URL: https://${CMS_DOMAIN}
+      APP_DOMAIN: ${CMS_DOMAIN}
+    networks:
+      - traefik
+      - cms_internal
     labels:
       - "traefik.enable=true"
-      # On utilise le réseau de ton Traefik existant
       - "traefik.docker.network=traefik"
-      - "traefik.http.routers.pageblanche.rule=Host(`cms.nino-rameau.fr`)"
-      - "traefik.http.routers.pageblanche.entrypoints=websecure"
-      - "traefik.http.routers.pageblanche.tls=true"
-      # /!\ Vérifie si ton resolver s'appelle 'letsencrypt' ou 'myresolver' dans ton autre projet
-      - "traefik.http.routers.pageblanche.tls.certresolver=letsencrypt"
-      - "traefik.http.services.pageblanche.loadbalancer.server.port=3000"
-    networks:
-      - traefik_externe
-      - internal
+      - "traefik.http.routers.cms.rule=Host(`${CMS_DOMAIN}`)"
+      - "traefik.http.routers.cms.entrypoints=websecure"
+      - "traefik.http.routers.cms.tls.certresolver=letsencrypt"
+      - "traefik.http.services.cms.loadbalancer.server.port=3000"
 
 volumes:
-  mysql_data:
+  cms_db_data:
 
 networks:
-  # On dit à Docker que ce réseau existe déjà sur le VPS
-  traefik_externe:
+  traefik:
     external: true
-    name: traefik
-  internal:
+  cms_internal:
     internal: true

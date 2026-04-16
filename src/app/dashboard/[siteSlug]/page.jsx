@@ -69,12 +69,23 @@ export default async function SiteDashboardLayout({ params, searchParams }) {
     include: {
       site: {
         include: {
+          // P3 — Exclure le champ content (JSON potentiellement volumineux) du listing
           pages: {
-            include: {
+            select: {
+              id: true,
+              title: true,
+              slug: true,
+              status: true,
+              siteId: true,
+              parentId: true,
+              createdAt: true,
+              updatedAt: true,
               modifications: {
                 orderBy: { createdAt: 'desc' },
                 take: 1,
-                include: {
+                select: {
+                  createdAt: true,
+                  action: true,
                   user: {
                     select: {
                       name: true,

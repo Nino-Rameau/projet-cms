@@ -57,12 +57,15 @@ model Site {
   description String?
   language    String   @default("fr")
   isPublic    Boolean  @default(false)
-  
+
   pages       Page[]
   members     Member[]
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  // P1 — Index pour le routage par domaine personnalisé
+  @@index([domain])
 }
 
 enum PageStatus {
@@ -91,6 +94,8 @@ model Page {
   updatedAt   DateTime   @updatedAt
 
   @@unique([siteId, slug]) // Un site ne peut avoir deux pages avec le même slug
+  // P1 — Index pour filtrer les pages publiées d'un site
+  @@index([siteId, status])
 }
 
 model PageModification {
@@ -128,4 +133,6 @@ model Member {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, siteId]) // Un utilisateur ne peut avoir qu'un seul rôle par site
+  // P1 — Index pour lister les membres d'un site filtrés par rôle
+  @@index([siteId, role])
 }

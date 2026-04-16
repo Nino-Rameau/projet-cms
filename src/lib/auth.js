@@ -52,5 +52,9 @@ export const authOptions = {
       return session;
     }
   },
-  secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-dev",
+  secret: process.env.NEXTAUTH_SECRET,
 };
+
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error("NEXTAUTH_SECRET est requis. Définis-le dans ton fichier .env");
+}

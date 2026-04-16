@@ -65,9 +65,10 @@ export default async function SiteTeamPage({ params, searchParams }) {
 
   const site = membership.site;
 
+  // P2 — Sélectionner uniquement les champs utilisateur nécessaires (évite de charger image, password, etc.)
   const members = await prisma.member.findMany({
     where: { siteId: site.id },
-    include: { user: true },
+    include: { user: { select: { id: true, name: true, email: true } } },
     orderBy: [
       { role: 'asc' },
       { createdAt: 'asc' },

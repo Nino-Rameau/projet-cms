@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
+import { rateLimit } from "@/lib/rateLimit";
+
+const BCRYPT_ROUNDS = 12;
 
 const registerSchema = z.object({
   name: z.string().min(2, "Le nom doit faire au moins 2 caractères"),
@@ -10,37 +13,53 @@ const registerSchema = z.object({
 });
 
 export async function POST(request) {
+  // S5 — Rate limiting : 10 tentatives / minute par IP
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim()
+    || request.headers.get("x-real-ip")
+    || "unknown";
+
+  const { success, remaining } = rateLimit({ key: `register:${ip}`, limit: 10, windowMs: 60_000 });
+
+  if (!success) {
+    return NextResponse.json(
+      { error: "Trop de tentatives. Réessaie dans une minute." },
+      { status: 429, headers: { "Retry-After": "60", "X-RateLimit-Remaining": "0" } }
+    );
+  }
+
   try {
     const body = await request.json();
-    
-    // 1. Validation avec Zod
+
+    // S4 — Validation avec Zod
     const validation = registerSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { error: validation.error.errors[0].message }, 
+        { error: validation.error.errors[0].message },
         { status: 400 }
       );
     }
 
     const { name, email, password } = validation.data;
 
-    // 2. Vérifier si utilisateur existe déjà
+    // Vérifier si utilisateur existe déjà
     const userExist = await prisma.user.findUnique({
-      where: { email },
+      where: { email: email.toLowerCase() },
     });
 
     if (userExist) {
-      return NextResponse.json({ error: "Un compte avec cet email existe déjà" }, { status: 409 });
+      return NextResponse.json(
+        { error: "Un compte avec cet email existe déjà" },
+        { status: 409 }
+      );
     }
 
-    // 3. Hachage du MDP
-    const hashedPassword = await bcrypt.hash(password, 12);
+    // S6 — Hachage avec coût centralisé (12 rounds)
+    const hashedPassword = await bcrypt.hash(password, BCRYPT_ROUNDS);
 
-    // 4. Création dans la DB
     const user = await prisma.user.create({
       data: {
         name,
-        email,
+        email: email.toLowerCase(),
         password: hashedPassword,
       },
     });
@@ -48,17 +67,14 @@ export async function POST(request) {
     return NextResponse.json({ id: user.id, email: user.email, name: user.name });
 
   } catch (error) {
-    console.error("ERREUR D'ENREGISTREMENT: ", error);
-    
-    // Si c'est Prisma qui plante (souvent "connexion refusée" ou "table n'existe pas")
+    console.error("[REGISTER_ERROR]", error?.code ?? "UNKNOWN");
+
+    // S4 — Ne pas exposer les détails d'erreur internes au client
     let errorMsg = "Erreur interne au serveur.";
-    if (error?.code === 'P1001' || error?.code === 'P2021') {
-      errorMsg = "Impossible de joindre la base de données PostgreSQL ou elle n'est pas synchronisée (lancez 'npx prisma db push').";
+    if (error?.code === "P1001" || error?.code === "P2021") {
+      errorMsg = "Impossible de joindre la base de données (lancez 'npx prisma db push').";
     }
-    
-    return NextResponse.json(
-      { error: errorMsg, details: error.message }, 
-      { status: 500 }
-    );
+
+    return NextResponse.json({ error: errorMsg }, { status: 500 });
   }
 }

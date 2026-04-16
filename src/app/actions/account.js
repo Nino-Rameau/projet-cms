@@ -5,6 +5,16 @@ import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { z } from "zod";
+
+// S6 — Coût bcrypt centralisé (aligné avec register/route.js)
+const BCRYPT_ROUNDS = 12;
+
+// S7 — Schéma de validation email/profil
+const profileSchema = z.object({
+  name: z.string().max(120, "Le nom est trop long").optional(),
+  email: z.string().email("Format d'email invalide"),
+});
 
 export async function updateAccountProfile(formData) {
   const session = await getServerSession(authOptions);
@@ -13,15 +23,18 @@ export async function updateAccountProfile(formData) {
   }
 
   const name = String(formData.get("name") || "").trim();
-  const email = String(formData.get("email") || "").trim().toLowerCase();
+  const emailRaw = String(formData.get("email") || "").trim().toLowerCase();
 
-  if (!email) {
-    redirect("/dashboard/setting?profileError=email_required");
+  // S7 — Validation Zod
+  const validation = profileSchema.safeParse({ name: name || undefined, email: emailRaw });
+  if (!validation.success) {
+    const code = validation.error.errors[0].message.includes("email")
+      ? "invalid_email"
+      : "name_too_long";
+    redirect(`/dashboard/setting?profileError=${code}`);
   }
 
-  if (name.length > 120) {
-    redirect("/dashboard/setting?profileError=name_too_long");
-  }
+  const { email } = validation.data;
 
   const existingByEmail = await prisma.user.findUnique({
     where: { email },
@@ -85,7 +98,8 @@ export async function updateAccountPassword(formData) {
     }
   }
 
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
+  // S6 — Coût centralisé à 12 rounds
+  const hashedPassword = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
 
   await prisma.user.update({
     where: { id: session.user.id },

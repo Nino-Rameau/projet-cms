@@ -8,7 +8,6 @@ import { createNewSite } from '@/app/actions/site';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import AppHeader from '@/components/ui/AppHeader';
 
-const GLOBAL_PAGE_SLUGS = new Set(['__global-header', '__global-footer']);
 
 export default async function DashboardPage({ searchParams }) {
   const session = await getServerSession(authOptions);
@@ -18,17 +17,38 @@ export default async function DashboardPage({ searchParams }) {
     return redirect('/');
   }
 
-  // Récupérer les sites de l'utilisateur connecté via la table Members
-  const userMemberships = await prisma.member.findMany({
-    where: { userId: session.user.id },
-    include: {
-      site: {
-        include: { pages: true } // Pour savoir combien de pages il a etc..
-      }
-    }
-  });
+  // PERF-3 — _count évite de charger tout le contenu JSON des pages juste pour les compter
+  // PERF-5 — Pagination : 10 / 25 / 50 sites par page
+  const GLOBAL_SLUGS = ['__global-header', '__global-footer'];
+  const PER_PAGE_OPTIONS = [10, 25, 50];
+  const perPage = PER_PAGE_OPTIONS.includes(Number(resolvedSearchParams?.perPage))
+    ? Number(resolvedSearchParams.perPage)
+    : 25;
+  const currentPage = Math.max(1, Number(resolvedSearchParams?.page) || 1);
+
+  const [userMemberships, totalCount] = await Promise.all([
+    prisma.member.findMany({
+      where: { userId: session.user.id },
+      include: {
+        site: {
+          include: {
+            _count: {
+              select: {
+                pages: { where: { slug: { notIn: GLOBAL_SLUGS } } },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip: (currentPage - 1) * perPage,
+      take: perPage,
+    }),
+    prisma.member.count({ where: { userId: session.user.id } }),
+  ]);
 
   const sites = userMemberships.map(m => m.site);
+  const totalPages = Math.ceil(totalCount / perPage);
 
   const dashboardError = resolvedSearchParams?.error || '';
   const submittedName = resolvedSearchParams?.name ? decodeURIComponent(String(resolvedSearchParams.name)) : '';
@@ -104,6 +124,32 @@ export default async function DashboardPage({ searchParams }) {
           </form>
         </div>
 
+        {/* PERF-5 — Contrôles de pagination */}
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm text-pb-foreground/60">
+            {totalCount} site{totalCount > 1 ? 's' : ''} au total
+          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-pb-foreground/60">Sites par page :</span>
+            {[10, 25, 50].map((n) => {
+              const params = new URLSearchParams({ perPage: n, page: 1 });
+              return (
+                <a
+                  key={n}
+                  href={`/dashboard?${params}`}
+                  className={`px-2 py-1 text-xs rounded border transition ${
+                    perPage === n
+                      ? 'bg-pb-accent text-white border-pb-accent'
+                      : 'border-pb-border hover:bg-pb-border/30'
+                  }`}
+                >
+                  {n}
+                </a>
+              );
+            })}
+          </div>
+        </div>
+
         {sites.length === 0 ? (
           <div className="p-12 text-center border-2 border-dashed border-pb-border rounded-xl">
              <h2 className="text-gray-500 font-medium pb-2">Vous n'avez aucun site pour le moment.</h2>
@@ -118,7 +164,7 @@ export default async function DashboardPage({ searchParams }) {
                   <div className="flex items-center justify-between mb-6">
                      <span className="text-xs text-pb-foreground/60 font-mono">/{site.slug}</span>
                      <span className="text-xs bg-pb-border/30 px-2 py-1 rounded">
-                       {site.pages.filter((page) => !GLOBAL_PAGE_SLUGS.has(page.slug)).length} page(s)
+                       {site._count.pages} page(s)
                      </span>
                   </div>
                 </div>
@@ -139,6 +185,25 @@ export default async function DashboardPage({ searchParams }) {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Navigation pages */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-8">
+            {currentPage > 1 && (
+              <a href={`/dashboard?perPage=${perPage}&page=${currentPage - 1}`} className="px-3 py-1.5 text-sm border border-pb-border rounded-md hover:bg-pb-border/30 transition">
+                ← Précédent
+              </a>
+            )}
+            <span className="text-sm text-pb-foreground/60">
+              Page {currentPage} / {totalPages}
+            </span>
+            {currentPage < totalPages && (
+              <a href={`/dashboard?perPage=${perPage}&page=${currentPage + 1}`} className="px-3 py-1.5 text-sm border border-pb-border rounded-md hover:bg-pb-border/30 transition">
+                Suivant →
+              </a>
+            )}
           </div>
         )}
       </main>

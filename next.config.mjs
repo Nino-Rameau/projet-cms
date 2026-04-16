@@ -9,6 +9,13 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react'],
   },
   turbopack: {},
+  // PERF-6 — Autoriser les images externes depuis n'importe quel domaine (CMS)
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: '**' },
+      { protocol: 'http',  hostname: '**' },
+    ],
+  },
 };
 
 export default nextConfig;

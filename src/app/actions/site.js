@@ -1,11 +1,17 @@
 "use server"
+import { randomUUID } from "crypto";
 import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { validateOrigin } from "@/lib/validateOrigin";
 
 const GLOBAL_HEADER_SLUG = "__global-header";
 const GLOBAL_FOOTER_SLUG = "__global-footer";
+
+// S3 — Slugs réservés qui ne peuvent pas être créés par l'utilisateur
+const RESERVED_SLUGS = new Set([GLOBAL_HEADER_SLUG, GLOBAL_FOOTER_SLUG]);
+const MAX_SLUG_LENGTH = 80;
 
 class ActionError extends Error {
   constructor(code) {
@@ -147,8 +153,10 @@ export async function createNewPage(formData) {
     if (!siteId) throwActionError("site_not_found");
     if (!title) throwActionError("page_title_required");
 
-    const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
+    let slug = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)+/g, "");
     if (!slug) throwActionError("page_slug_invalid");
+    if (slug.length > MAX_SLUG_LENGTH) slug = slug.slice(0, MAX_SLUG_LENGTH);
+    if (RESERVED_SLUGS.has(slug)) throwActionError("page_slug_reserved");
 
     await requireEditableMembership(siteId, session.user.id);
 
@@ -256,6 +264,7 @@ export async function deletePage(formData) {
   const siteDashboardPath = getSiteDashboardPath(siteSlug);
 
   try {
+    await validateOrigin();
     const session = await getServerSession(authOptions);
     if (!session) throwActionError("unauthorized");
 
@@ -316,8 +325,9 @@ export async function savePageContent(pageId, content) {
   return { success: true };
 }
 
+// PERF-4 — randomUUID garantit l'unicité des IDs de blocs
 function uid(prefix = 'block') {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return `${prefix}-${randomUUID()}`;
 }
 
 function createHeaderTemplate() {
@@ -547,6 +557,7 @@ export async function updateSiteSettings(formData) {
   const settingsPath = `${getSiteDashboardPath(siteSlug)}/settings`;
 
   try {
+    await validateOrigin();
     const session = await getServerSession(authOptions);
     if (!session) throwActionError("unauthorized");
 
@@ -585,6 +596,7 @@ export async function deleteSite(formData) {
   const settingsPath = `${getSiteDashboardPath(siteSlug)}/settings`;
 
   try {
+    await validateOrigin();
     const session = await getServerSession(authOptions);
     if (!session) throwActionError("unauthorized");
 
@@ -735,6 +747,7 @@ export async function removeSiteMember(formData) {
   const teamPath = `${getSiteDashboardPath(siteSlug)}/team`;
 
   try {
+    await validateOrigin();
     const session = await getServerSession(authOptions);
     if (!session) throwActionError("unauthorized");
 

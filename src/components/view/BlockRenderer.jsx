@@ -1,3 +1,23 @@
+import DOMPurify from 'isomorphic-dompurify';
+import Image from 'next/image';
+
+// P7 — Placeholder local (pas de requête vers placehold.co)
+const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400' viewBox='0 0 600 400'%3E%3Crect fill='%23e2e8f0' width='600' height='400'/%3E%3Ctext fill='%2394a3b8' font-family='sans-serif' font-size='24' x='300' y='210' dominant-baseline='middle' text-anchor='middle'%3EImage%3C/text%3E%3C/svg%3E";
+
+// S3 — Schémas d'URL autorisés pour les liens
+const SAFE_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
+
+function safeHref(url) {
+  if (!url || url === '#') return '#';
+  try {
+    const parsed = new URL(url, 'https://example.com');
+    if (!SAFE_PROTOCOLS.has(parsed.protocol)) return '#';
+  } catch {
+    return '#';
+  }
+  return url;
+}
+
 const normalizeSocialIconName = (iconName) => String(iconName || '').trim().toLowerCase();
 
 const getSocialLabelForIcon = (iconName) => {
@@ -115,11 +135,14 @@ export default function BlockRenderer({ block, siteSlug = '', isCustomDomain = f
     });
   };
 
+  // S2 — Sanitisation robuste avec DOMPurify (bloque XSS, iframes, javascript:, etc.)
   const sanitizeRichText = (html = '') => {
-    const clean = String(html)
-      .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
-      .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
-      .replace(/\son\w+=("[^"]*"|'[^']*')/gi, '');
+    const clean = DOMPurify.sanitize(String(html), {
+      ALLOWED_TAGS: ['b', 'i', 'u', 'strong', 'em', 's', 'a', 'br', 'p', 'span', 'ul', 'ol', 'li'],
+      ALLOWED_ATTR: ['href', 'target', 'rel'],
+      ALLOW_DATA_ATTR: false,
+      FORCE_BODY: false,
+    });
     return processHtmlLinks(clean);
   };
 
@@ -140,7 +163,7 @@ export default function BlockRenderer({ block, siteSlug = '', isCustomDomain = f
   const getButtonHref = () => {
     switch (props.actionType) {
       case 'link':
-        return props.href || '#';
+        return safeHref(props.href);
       case 'page': {
         const normalized = normalizeSiteRelativePath(props.pagePath);
         if (!normalized) return isCustomDomain ? '/' : (`/view/${siteSlug}/home`);
@@ -148,7 +171,7 @@ export default function BlockRenderer({ block, siteSlug = '', isCustomDomain = f
         return isCustomDomain ? `/${finalPath}` : `/view/${siteSlug}/${normalized}`;
       }
       case 'file':
-        return props.fileUrl || '#';
+        return safeHref(props.fileUrl);
       case 'email':
         return props.email ? `mailto:${props.email}` : '#';
       case 'phone':
@@ -183,8 +206,17 @@ export default function BlockRenderer({ block, siteSlug = '', isCustomDomain = f
     case 'heading':
       return <h2 className={`font-bold text-2xl mb-4 ${className}`} style={{...style, ...props.style}}>{content || 'Titre'}</h2>;
     case 'image':
-      // default mock image
-      return <img src={props.src || "https://placehold.co/600x400/png"} alt={props.alt || "Image"} className={`max-w-full h-auto ${className}`} style={{...style, ...props.style}} />;
+      return (
+        <Image
+          src={props.src || PLACEHOLDER_IMAGE}
+          alt={props.alt || "Image"}
+          width={800}
+          height={600}
+          className={`max-w-full h-auto ${className}`}
+          style={{ width: '100%', height: 'auto', ...style, ...props.style }}
+          unoptimized
+        />
+      );
     case 'button':
       return (
         <a
@@ -301,7 +333,7 @@ export default function BlockRenderer({ block, siteSlug = '', isCustomDomain = f
             return (
               <a
                 key={`social-link-${i}`}
-                href={item?.href || '#'}
+                href={safeHref(item?.href)}
                 className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-700 hover:border-slate-500 hover:text-slate-900 transition"
                 aria-label={getSocialLabelForIcon(item?.icon)}
                 title={getSocialLabelForIcon(item?.icon)}
