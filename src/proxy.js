@@ -16,7 +16,7 @@ export default function middleware(req, event) {
   const appDomain = process.env.CMS_DOMAIN || "localhost";
   const isAppDomain = hostname === appDomain || hostname.endsWith(`.${appDomain}`);
 
-  if (!isLocalhost && !isAppDomain && !url.pathname.startsWith('/view') && !url.pathname.startsWith('/domain') && !url.pathname.startsWith('/api') && !url.pathname.startsWith('/_next') && url.pathname !== '/favicon.ico' && url.pathname !== '/robots.txt' && url.pathname !== '/sitemap.xml') {
+  if (!isLocalhost && !isAppDomain && !url.pathname.startsWith('/view') && !url.pathname.startsWith('/domain') && !url.pathname.startsWith('/api') && !url.pathname.startsWith('/_next') && url.pathname !== '/favicon.ico') {
     // Rewrite vers la route domaine
     return NextResponse.rewrite(new URL(`/domain/${hostname}${url.pathname === '/' ? '/home' : url.pathname}`, req.url));
   }
