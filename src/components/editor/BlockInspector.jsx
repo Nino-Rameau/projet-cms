@@ -11,7 +11,10 @@ import {
   getSocialLabelForIcon, createDefaultSocialItem,
 } from './editorUtils.jsx';
 import { SOCIAL_ICON_OPTIONS, PAGE_SETTINGS_DEFAULTS } from './editorConstants';
-import { randomUUID } from 'crypto';
+const randomUUID = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+  const r = Math.random() * 16 | 0;
+  return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+});
 
 export default function BlockInspector({
   selectedBlock,
