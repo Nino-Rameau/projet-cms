@@ -35,16 +35,46 @@ services:
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
       NEXTAUTH_URL: https://${CMS_DOMAIN}
       CMS_DOMAIN: ${CMS_DOMAIN}
+      APP_DOMAIN: ${CMS_DOMAIN}
+      NEXT_PUBLIC_VPS_IP: ${NEXT_PUBLIC_VPS_IP}
     networks:
       - traefik
       - cms_internal
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik"
+
+      # ─── Service unique partagé par tous les routeurs ────────────
+      - "traefik.http.services.cms.loadbalancer.server.port=3000"
+
+      # ─── Routeur principal CMS — HTTPS avec cert Let's Encrypt ──
       - "traefik.http.routers.cms.rule=Host(`${CMS_DOMAIN}`)"
       - "traefik.http.routers.cms.entrypoints=websecure"
       - "traefik.http.routers.cms.tls.certresolver=letsencrypt"
-      - "traefik.http.services.cms.loadbalancer.server.port=3000"
+      - "traefik.http.routers.cms.service=cms"
+      - "traefik.http.routers.cms.priority=10"
+
+      # ─── Redirect HTTP → HTTPS pour le domaine CMS ───────────────
+      - "traefik.http.routers.cms-http.rule=Host(`${CMS_DOMAIN}`)"
+      - "traefik.http.routers.cms-http.entrypoints=web"
+      - "traefik.http.routers.cms-http.middlewares=https-redirect"
+      - "traefik.http.routers.cms-http.priority=10"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.permanent=true"
+
+      # ─── Catch-all HTTPS pour les domaines personnalisés ─────────
+      # Traefik génère automatiquement un cert Let's Encrypt par domaine
+      - "traefik.http.routers.cms-custom.rule=HostRegexp(`{host:.+}`)"
+      - "traefik.http.routers.cms-custom.entrypoints=websecure"
+      - "traefik.http.routers.cms-custom.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.cms-custom.service=cms"
+      - "traefik.http.routers.cms-custom.priority=1"
+
+      # ─── Catch-all HTTP pour les domaines personnalisés ──────────
+      - "traefik.http.routers.cms-custom-http.rule=HostRegexp(`{host:.+}`)"
+      - "traefik.http.routers.cms-custom-http.entrypoints=web"
+      - "traefik.http.routers.cms-custom-http.service=cms"
+      - "traefik.http.routers.cms-custom-http.priority=1"
 
 volumes:
   cms_db_data:
