@@ -5,6 +5,11 @@ import './globals.css'
 export const metadata = {
   title: 'PageBlanche CMS',
   description: 'Visual Builder Full-Stack',
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: { index: false, follow: false },
+  },
 }
 
 export default function RootLayout({ children }) {

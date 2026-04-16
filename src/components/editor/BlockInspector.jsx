@@ -256,7 +256,7 @@ export default function BlockInspector({
               <label className="block text-xs font-medium text-pb-foreground/70 mb-1">Classe CSS de la page</label>
               <input type="text" value={pageSettings.customClassName || ''} onChange={(e) => updatePageSetting('customClassName', e.target.value)} placeholder="ex: pb-page-landing max-w-screen-xl" className="w-full bg-pb-background border border-pb-border rounded-lg px-3 py-2 text-sm" />
             </div>
-            <label className="inline-flex items-center gap-2 text-xs text-pb-foreground/70 pt-2 block">
+            <label className="inline-flex items-center gap-2 text-xs text-pb-foreground/70 pt-2">
               <input type="checkbox" checked={Boolean(pageSettings.noIndex)} onChange={(e) => updatePageSetting('noIndex', e.target.checked)} className="rounded border-pb-border text-pb-accent focus:ring-pb-accent" />
               Ne pas indexer cette page (noindex)
             </label>

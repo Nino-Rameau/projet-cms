@@ -1,13 +1,11 @@
 "use client";
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 export function AuthModal({ isOpen, onClose }) {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const router = useRouter();
 
   if (!isOpen) return null;
 
@@ -45,7 +43,7 @@ export function AuthModal({ isOpen, onClose }) {
         // Connecter après Inscription
         const result = await signIn("credentials", { email, password, redirect: false });
         if (result?.error) setError(result.error);
-        else { onClose(); router.push("/dashboard"); }
+        else { onClose(); window.location.href = "/dashboard"; }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -61,7 +59,7 @@ export function AuthModal({ isOpen, onClose }) {
       setIsLoading(false);
     } else {
       onClose();
-      router.push("/dashboard");
+      window.location.href = "/dashboard";
     }
   }
 
