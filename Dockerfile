@@ -17,6 +17,7 @@ COPY . .
 # URL factice uniquement pour que prisma generate et next build passent
 # (aucune connexion réelle n'est faite au build time)
 RUN PROD_DATABASE_URL="mysql://build:build@localhost:3306/build" \
+    NEXTAUTH_SECRET="build-time-placeholder-secret" \
     NODE_ENV=production \
     npm run build
 
