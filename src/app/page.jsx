@@ -130,7 +130,7 @@ function FaqItem({ question, answer }) {
   return (
     <button
       onClick={() => setOpen(!open)}
-      className="w-full text-left p-6 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 transition-all"
+      className="w-full p-6 text-left transition-all bg-white border rounded-2xl border-slate-200 hover:border-slate-300"
     >
       <div className="flex items-center justify-between gap-4">
         <span className="text-base font-bold text-slate-900">{question}</span>
@@ -140,7 +140,7 @@ function FaqItem({ question, answer }) {
         />
       </div>
       {open && (
-        <p className="mt-3 text-sm leading-relaxed text-slate-600 border-t border-slate-100 pt-3">
+        <p className="pt-3 mt-3 text-sm leading-relaxed border-t text-slate-600 border-slate-100">
           {answer}
         </p>
       )}
@@ -164,7 +164,7 @@ export default function Home() {
               <span className="hidden text-sm font-medium text-slate-500 md:inline">Bonjour, {userName}</span>
               <button
                 onClick={() => signOut()}
-                className="text-sm font-medium text-slate-500 transition hover:text-slate-800"
+                className="text-sm font-medium transition text-slate-500 hover:text-slate-800"
               >
                 Déconnexion
               </button>
@@ -179,7 +179,7 @@ export default function Home() {
             <>
               <button
                 onClick={openAuth}
-                className="text-sm font-medium text-slate-600 transition hover:text-slate-900"
+                className="text-sm font-medium transition text-slate-600 hover:text-slate-900"
               >
                 Se connecter
               </button>
@@ -195,9 +195,9 @@ export default function Home() {
       </AppHeader>
 
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden bg-slate-950 text-white">
+      <section className="relative overflow-hidden text-white bg-slate-950">
         {/* Background glows */}
-        <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 pointer-events-none">
           <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-[600px] w-[600px] rounded-full bg-blue-600/20 blur-[120px]" />
           <div className="absolute top-20 right-0 h-80 w-80 rounded-full bg-violet-600/15 blur-[100px]" />
           <div className="absolute bottom-0 left-10 h-64 w-64 rounded-full bg-indigo-500/10 blur-[80px]" />
@@ -211,32 +211,26 @@ export default function Home() {
           />
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-6 pt-24 pb-16 md:pt-32 md:pb-24">
+        <div className="relative px-6 pt-24 pb-16 mx-auto max-w-7xl md:pt-32 md:pb-24">
           <div className="flex flex-col items-center text-center">
-            {/* Badge */}
-            <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-blue-300 backdrop-blur">
-              <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse" />
-              Nouveau · Éditeur visuel v2
-            </div>
-
             {/* Heading */}
             <h1 className="[font-family:'DM_Serif_Display',_serif] max-w-4xl text-5xl leading-[1.05] tracking-tight sm:text-6xl md:text-7xl lg:text-8xl">
               Ton site web,{' '}
-              <span className="bg-gradient-to-r from-blue-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">
-                sans coder.
+              <span className="text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-indigo-400 bg-clip-text">
+                sans coder  PageBlanche.
               </span>
             </h1>
 
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-slate-400 sm:text-xl">
+            <p className="max-w-xl mt-6 text-lg leading-relaxed text-slate-400 sm:text-xl">
               Crée, modifie et publie des pages qui convertissent — en quelques minutes, pas en quelques semaines.
             </p>
 
             {/* CTAs */}
-            <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row">
+            <div className="flex flex-col items-center gap-3 mt-10 sm:flex-row">
               {session ? (
                 <Link
                   href="/dashboard"
-                  className="group flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 px-8 py-4 text-base font-bold text-white shadow-lg shadow-blue-900/30 transition hover:-translate-y-1 hover:shadow-blue-900/50"
+                  className="flex items-center gap-2 px-8 py-4 text-base font-bold text-white transition shadow-lg group rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 shadow-blue-900/30 hover:-translate-y-1 hover:shadow-blue-900/50"
                 >
                   Ouvrir mon espace
                   <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
@@ -244,7 +238,7 @@ export default function Home() {
               ) : (
                 <button
                   onClick={openAuth}
-                  className="group flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 px-8 py-4 text-base font-bold text-white shadow-lg shadow-blue-900/30 transition hover:-translate-y-1 hover:shadow-blue-900/50"
+                  className="flex items-center gap-2 px-8 py-4 text-base font-bold text-white transition shadow-lg group rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 shadow-blue-900/30 hover:-translate-y-1 hover:shadow-blue-900/50"
                 >
                   Créer mon site gratuitement
                   <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
@@ -252,7 +246,7 @@ export default function Home() {
               )}
               <button
                 onClick={openAuth}
-                className="rounded-2xl border border-white/10 bg-white/5 px-8 py-4 text-base font-semibold text-white backdrop-blur transition hover:bg-white/10"
+                className="px-8 py-4 text-base font-semibold text-white transition border rounded-2xl border-white/10 bg-white/5 backdrop-blur hover:bg-white/10"
               >
                 Voir une démo
               </button>
@@ -264,18 +258,18 @@ export default function Home() {
           </div>
 
           {/* Product mockup */}
-          <div className="relative mx-auto mt-16 max-w-4xl">
+          <div className="relative max-w-4xl mx-auto mt-16">
             <div className="rounded-[20px] border border-white/10 bg-slate-900/80 p-1 shadow-2xl shadow-black/50 backdrop-blur">
               {/* Browser chrome */}
               <div className="flex items-center gap-1.5 px-4 py-3 border-b border-white/5">
                 <div className="h-2.5 w-2.5 rounded-full bg-red-400/60" />
                 <div className="h-2.5 w-2.5 rounded-full bg-amber-400/60" />
                 <div className="h-2.5 w-2.5 rounded-full bg-emerald-400/60" />
-                <div className="mx-auto flex items-center gap-2 rounded-lg bg-white/5 px-4 py-1 text-xs text-slate-400">
+                <div className="flex items-center gap-2 px-4 py-1 mx-auto text-xs rounded-lg bg-white/5 text-slate-400">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                   monsite.pageblanche.app
                 </div>
-                <span className="text-xs text-blue-400 font-semibold">PUBLIÉ</span>
+                <span className="text-xs font-semibold text-blue-400">PUBLIÉ</span>
               </div>
               {/* Content */}
               <div className="grid grid-cols-5 gap-0 p-4 min-h-[260px]">
@@ -291,13 +285,13 @@ export default function Home() {
                 </div>
                 {/* Preview */}
                 <div className="col-span-4 pl-4 space-y-3">
-                  <div className="rounded-xl bg-gradient-to-r from-blue-600/20 to-indigo-600/20 border border-blue-500/10 p-4">
-                    <div className="h-2 w-16 rounded bg-blue-400/40 mb-2" />
-                    <div className="h-4 w-48 rounded bg-white/30" />
+                  <div className="p-4 border rounded-xl bg-gradient-to-r from-blue-600/20 to-indigo-600/20 border-blue-500/10">
+                    <div className="w-16 h-2 mb-2 rounded bg-blue-400/40" />
+                    <div className="w-48 h-4 rounded bg-white/30" />
                     <div className="h-3 w-36 rounded bg-white/15 mt-1.5" />
                     <div className="flex gap-2 mt-3">
-                      <div className="h-7 w-20 rounded-lg bg-blue-500/60" />
-                      <div className="h-7 w-16 rounded-lg bg-white/10 border border-white/10" />
+                      <div className="w-20 rounded-lg h-7 bg-blue-500/60" />
+                      <div className="w-16 border rounded-lg h-7 bg-white/10 border-white/10" />
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-2">
@@ -309,25 +303,25 @@ export default function Home() {
                       </div>
                     ))}
                   </div>
-                  <div className="rounded-xl bg-white/5 border border-white/5 p-3 flex items-center justify-between">
+                  <div className="flex items-center justify-between p-3 border rounded-xl bg-white/5 border-white/5">
                     <div className="space-y-1">
                       <div className="h-1.5 w-24 rounded bg-white/20" />
                       <div className="h-1.5 w-16 rounded bg-white/10" />
                     </div>
-                    <div className="h-7 w-24 rounded-lg bg-gradient-to-r from-blue-500/60 to-indigo-500/60" />
+                    <div className="w-24 rounded-lg h-7 bg-gradient-to-r from-blue-500/60 to-indigo-500/60" />
                   </div>
                 </div>
               </div>
             </div>
             {/* Glow under mockup */}
-            <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 h-20 w-3/4 rounded-full bg-blue-500/15 blur-3xl" />
+            <div className="absolute w-3/4 h-20 -translate-x-1/2 rounded-full -bottom-10 left-1/2 bg-blue-500/15 blur-3xl" />
           </div>
         </div>
       </section>
 
       {/* ── STATS ── */}
       <section className="bg-white border-y border-slate-100">
-        <div className="mx-auto max-w-5xl px-6 py-12">
+        <div className="max-w-5xl px-6 py-12 mx-auto">
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
             {stats.map((s) => (
               <div key={s.label} className="text-center">
@@ -342,9 +336,9 @@ export default function Home() {
       </section>
 
       {/* ── FEATURES ── */}
-      <section className="mx-auto max-w-7xl px-6 py-24">
-        <div className="text-center mb-16">
-          <span className="inline-block rounded-full bg-blue-50 px-4 py-1 text-xs font-bold uppercase tracking-widest text-blue-600 mb-4">
+      <section className="px-6 py-24 mx-auto max-w-7xl">
+        <div className="mb-16 text-center">
+          <span className="inline-block px-4 py-1 mb-4 text-xs font-bold tracking-widest text-blue-600 uppercase rounded-full bg-blue-50">
             Fonctionnalités
           </span>
           <h2 className="[font-family:'DM_Serif_Display',_serif] text-4xl leading-tight text-slate-900 md:text-5xl">
@@ -360,12 +354,12 @@ export default function Home() {
             return (
               <article
                 key={f.title}
-                className="group relative rounded-2xl border border-slate-100 bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md hover:border-slate-200"
+                className="relative p-6 transition bg-white border shadow-sm group rounded-2xl border-slate-100 hover:-translate-y-1 hover:shadow-md hover:border-slate-200"
               >
                 <div className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${f.color} shadow-sm`}>
                   <Icon size={20} className="text-white" />
                 </div>
-                <h3 className="text-base font-bold text-slate-900 mb-2">{f.title}</h3>
+                <h3 className="mb-2 text-base font-bold text-slate-900">{f.title}</h3>
                 <p className="text-sm leading-relaxed text-slate-500">{f.description}</p>
               </article>
             );
@@ -374,33 +368,33 @@ export default function Home() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section className="bg-slate-950 text-white py-24 overflow-hidden relative">
-        <div className="pointer-events-none absolute inset-0">
+      <section className="relative py-24 overflow-hidden text-white bg-slate-950">
+        <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/3 h-96 w-96 rounded-full bg-blue-600/10 blur-[120px]" />
           <div className="absolute bottom-0 right-1/4 h-64 w-64 rounded-full bg-violet-600/10 blur-[80px]" />
         </div>
-        <div className="relative mx-auto max-w-7xl px-6">
-          <div className="text-center mb-16">
-            <span className="inline-block rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">
+        <div className="relative px-6 mx-auto max-w-7xl">
+          <div className="mb-16 text-center">
+            <span className="inline-block px-4 py-1 mb-4 text-xs font-bold tracking-widest uppercase border rounded-full border-white/10 bg-white/5 text-slate-400">
               En 3 étapes
             </span>
             <h2 className="[font-family:'DM_Serif_Display',_serif] text-4xl leading-tight md:text-5xl">
               De zéro à publié
               <br />
-              <span className="bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text text-transparent">en quelques minutes.</span>
+              <span className="text-transparent bg-gradient-to-r from-blue-400 to-violet-400 bg-clip-text">en quelques minutes.</span>
             </h2>
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {steps.map((step, i) => (
-              <div key={step.num} className="relative rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur">
+              <div key={step.num} className="relative p-8 border rounded-2xl border-white/10 bg-white/5 backdrop-blur">
                 <span className="[font-family:'DM_Serif_Display',_serif] text-6xl font-bold text-white/5 absolute top-6 right-8 select-none">
                   {step.num}
                 </span>
-                <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-sm font-black text-white shadow">
+                <div className="inline-flex items-center justify-center w-10 h-10 mb-4 text-sm font-black text-white shadow rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600">
                   {i + 1}
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">{step.title}</h3>
+                <h3 className="mb-2 text-lg font-bold text-white">{step.title}</h3>
                 <p className="text-sm leading-relaxed text-slate-400">{step.description}</p>
               </div>
             ))}
@@ -410,7 +404,7 @@ export default function Home() {
             {session ? (
               <Link
                 href="/dashboard"
-                className="group inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 px-8 py-4 text-base font-bold text-white shadow-lg shadow-blue-900/30 transition hover:-translate-y-1"
+                className="inline-flex items-center gap-2 px-8 py-4 text-base font-bold text-white transition shadow-lg group rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 shadow-blue-900/30 hover:-translate-y-1"
               >
                 Commencer maintenant
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
@@ -418,7 +412,7 @@ export default function Home() {
             ) : (
               <button
                 onClick={openAuth}
-                className="group inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 px-8 py-4 text-base font-bold text-white shadow-lg shadow-blue-900/30 transition hover:-translate-y-1"
+                className="inline-flex items-center gap-2 px-8 py-4 text-base font-bold text-white transition shadow-lg group rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 shadow-blue-900/30 hover:-translate-y-1"
               >
                 Commencer maintenant
                 <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
@@ -429,9 +423,9 @@ export default function Home() {
       </section>
 
       {/* ── TESTIMONIALS ── */}
-      <section className="mx-auto max-w-7xl px-6 py-24">
-        <div className="text-center mb-16">
-          <span className="inline-block rounded-full bg-emerald-50 px-4 py-1 text-xs font-bold uppercase tracking-widest text-emerald-600 mb-4">
+      <section className="px-6 py-24 mx-auto max-w-7xl">
+        <div className="mb-16 text-center">
+          <span className="inline-block px-4 py-1 mb-4 text-xs font-bold tracking-widest uppercase rounded-full bg-emerald-50 text-emerald-600">
             Témoignages
           </span>
           <h2 className="[font-family:'DM_Serif_Display',_serif] text-4xl leading-tight text-slate-900 md:text-5xl">
@@ -445,15 +439,15 @@ export default function Home() {
           {testimonials.map((t) => (
             <article
               key={t.author}
-              className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm flex flex-col"
+              className="flex flex-col p-6 bg-white border shadow-sm rounded-2xl border-slate-100"
             >
               <div className="flex gap-0.5 mb-4">
                 {Array.from({ length: t.stars }).map((_, i) => (
                   <Star key={i} size={14} className="fill-amber-400 text-amber-400" />
                 ))}
               </div>
-              <p className="text-base leading-relaxed text-slate-700 flex-1">"{t.quote}"</p>
-              <div className="mt-6 flex items-center gap-3">
+              <p className="flex-1 text-base leading-relaxed text-slate-700">"{t.quote}"</p>
+              <div className="flex items-center gap-3 mt-6">
                 <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${t.color} flex items-center justify-center text-xs font-black text-white shrink-0`}>
                   {t.avatar}
                 </div>
@@ -468,16 +462,16 @@ export default function Home() {
       </section>
 
       {/* ── COMPARISON ── */}
-      <section className="bg-slate-50 py-24">
-        <div className="mx-auto max-w-4xl px-6">
+      <section className="py-24 bg-slate-50">
+        <div className="max-w-4xl px-6 mx-auto">
           <div className="text-center mb-14">
             <h2 className="[font-family:'DM_Serif_Display',_serif] text-4xl leading-tight text-slate-900 md:text-5xl">
               Avant vs après PageBlanche
             </h2>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-red-100 bg-red-50/50 p-6">
-              <p className="text-xs font-bold uppercase tracking-widest text-red-400 mb-4">Avant</p>
+            <div className="p-6 border border-red-100 rounded-2xl bg-red-50/50">
+              <p className="mb-4 text-xs font-bold tracking-widest text-red-400 uppercase">Avant</p>
               <ul className="space-y-3">
                 {[
                   'Un site qui ne te ressemble plus',
@@ -492,8 +486,8 @@ export default function Home() {
                 ))}
               </ul>
             </div>
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-6">
-              <p className="text-xs font-bold uppercase tracking-widest text-emerald-500 mb-4">Après PageBlanche</p>
+            <div className="p-6 border rounded-2xl border-emerald-100 bg-emerald-50/50">
+              <p className="mb-4 text-xs font-bold tracking-widest uppercase text-emerald-500">Après PageBlanche</p>
               <ul className="space-y-3">
                 {[
                   'Une vitrine claire, moderne et différenciante',
@@ -503,7 +497,7 @@ export default function Home() {
                 ].map((point) => (
                   <li key={point} className="flex items-start gap-3 text-sm text-slate-700">
                     <span className="mt-0.5 h-4 w-4 shrink-0 rounded-full bg-emerald-200 flex items-center justify-center">
-                      <Check size={10} className="text-emerald-600 font-black" />
+                      <Check size={10} className="font-black text-emerald-600" />
                     </span>
                     {point}
                   </li>
@@ -515,9 +509,9 @@ export default function Home() {
       </section>
 
       {/* ── FAQ ── */}
-      <section className="mx-auto max-w-3xl px-6 py-24">
-        <div className="text-center mb-12">
-          <span className="inline-block rounded-full bg-slate-100 px-4 py-1 text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">
+      <section className="max-w-3xl px-6 py-24 mx-auto">
+        <div className="mb-12 text-center">
+          <span className="inline-block px-4 py-1 mb-4 text-xs font-bold tracking-widest uppercase rounded-full bg-slate-100 text-slate-500">
             FAQ
           </span>
           <h2 className="[font-family:'DM_Serif_Display',_serif] text-4xl leading-tight text-slate-900">
@@ -534,30 +528,30 @@ export default function Home() {
       </section>
 
       {/* ── FINAL CTA ── */}
-      <section className="mx-auto max-w-7xl px-6 pb-24">
-        <div className="relative overflow-hidden rounded-3xl bg-slate-950 p-10 text-white text-center md:p-16">
-          <div className="pointer-events-none absolute inset-0">
+      <section className="px-6 pb-24 mx-auto max-w-7xl">
+        <div className="relative p-10 overflow-hidden text-center text-white rounded-3xl bg-slate-950 md:p-16">
+          <div className="absolute inset-0 pointer-events-none">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 h-80 w-80 rounded-full bg-blue-600/20 blur-[100px]" />
             <div className="absolute bottom-0 right-1/4 h-48 w-48 rounded-full bg-violet-600/15 blur-[60px]" />
           </div>
           <div className="relative">
-            <span className="inline-block rounded-full border border-white/10 bg-white/5 px-4 py-1 text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">
+            <span className="inline-block px-4 py-1 mb-6 text-xs font-bold tracking-widest uppercase border rounded-full border-white/10 bg-white/5 text-slate-400">
               Prêt à te lancer ?
             </span>
             <h2 className="[font-family:'DM_Serif_Display',_serif] text-4xl leading-tight md:text-6xl mb-6">
               Ton site mérite
               <br />
-              <span className="bg-gradient-to-r from-blue-400 via-violet-400 to-indigo-400 bg-clip-text text-transparent">
+              <span className="text-transparent bg-gradient-to-r from-blue-400 via-violet-400 to-indigo-400 bg-clip-text">
                 mieux qu'un template fade.
               </span>
             </h2>
-            <p className="text-slate-400 max-w-xl mx-auto mb-10 text-lg">
+            <p className="max-w-xl mx-auto mb-10 text-lg text-slate-400">
               Crée un compte, construis ta première page, et publie — tout ça en moins de 10 minutes.
             </p>
             {session ? (
               <Link
                 href="/dashboard"
-                className="group inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 px-10 py-5 text-lg font-bold text-white shadow-lg shadow-blue-900/30 transition hover:-translate-y-1"
+                className="inline-flex items-center gap-2 px-10 py-5 text-lg font-bold text-white transition shadow-lg group rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 shadow-blue-900/30 hover:-translate-y-1"
               >
                 Aller sur mon dashboard
                 <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
@@ -565,7 +559,7 @@ export default function Home() {
             ) : (
               <button
                 onClick={openAuth}
-                className="group inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 px-10 py-5 text-lg font-bold text-white shadow-lg shadow-blue-900/30 transition hover:-translate-y-1"
+                className="inline-flex items-center gap-2 px-10 py-5 text-lg font-bold text-white transition shadow-lg group rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 shadow-blue-900/30 hover:-translate-y-1"
               >
                 Créer mon site gratuitement
                 <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
@@ -577,14 +571,14 @@ export default function Home() {
       </section>
 
       {/* ── FOOTER ── */}
-      <footer className="border-t border-slate-100 bg-white py-8">
-        <div className="mx-auto max-w-7xl px-6 flex flex-col items-center justify-between gap-4 md:flex-row">
+      <footer className="py-8 bg-white border-t border-slate-100">
+        <div className="flex flex-col items-center justify-between gap-4 px-6 mx-auto max-w-7xl md:flex-row">
           <p className="[font-family:'DM_Serif_Display',_serif] text-lg font-bold text-slate-900">PageBlanche</p>
           <p className="text-xs text-slate-400">© {new Date().getFullYear()} PageBlanche · CMS moderne &amp; intuitif</p>
           <div className="flex gap-6 text-xs text-slate-400">
-            <a href="#" className="hover:text-slate-700 transition">Confidentialité</a>
-            <a href="#" className="hover:text-slate-700 transition">CGU</a>
-            <a href="#" className="hover:text-slate-700 transition">Contact</a>
+            <a href="#" className="transition hover:text-slate-700">Confidentialité</a>
+            <a href="#" className="transition hover:text-slate-700">CGU</a>
+            <a href="#" className="transition hover:text-slate-700">Contact</a>
           </div>
         </div>
       </footer>
