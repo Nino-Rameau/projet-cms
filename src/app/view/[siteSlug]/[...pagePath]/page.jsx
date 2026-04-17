@@ -149,9 +149,8 @@ async function getViewData(params) {
   const pageBlocks = pageParsed.blocks;
   const pageSettings = { ...PAGE_SETTINGS_DEFAULTS, ...pageParsed.settings };
   const globalFooterBlocks = parsePageContent(globalFooterPage?.content).blocks;
-  const blocks = [...globalHeaderBlocks, ...pageBlocks, ...globalFooterBlocks];
 
-  return { resolvedParams, site, page, blocks, pageBlocks, pageSettings };
+  return { resolvedParams, site, page, globalHeaderBlocks, pageBlocks, globalFooterBlocks, pageSettings };
 }
 
 export async function generateMetadata({ params }) {
@@ -191,7 +190,7 @@ export async function generateMetadata({ params }) {
 export default async function ViewPage({ params }) {
   const data = await getViewData(params);
   if (!data) return notFound();
-  const { blocks, pageSettings, site } = data;
+  const { globalHeaderBlocks, pageBlocks, globalFooterBlocks, pageSettings, site } = data;
   const locale = t(site.language);
   const contentWidth = pageSettings.contentWidth || '100%';
   const mainMaxWidth = contentWidth === '100%' ? '100%' : contentWidth;
@@ -200,27 +199,37 @@ export default async function ViewPage({ params }) {
     backgroundColor: '#ffffff',
     backgroundImage: [
       pageSettings.backgroundImage || '',
-      pageSettings.backgroundColor && pageSettings.backgroundColor !== 'transparent' 
-        ? `linear-gradient(${pageSettings.backgroundColor}, ${pageSettings.backgroundColor})` 
+      pageSettings.backgroundColor && pageSettings.backgroundColor !== 'transparent'
+        ? `linear-gradient(${pageSettings.backgroundColor}, ${pageSettings.backgroundColor})`
         : ''
     ].filter(Boolean).join(', ') || undefined,
   };
 
   return (
-    <div 
-      className="min-h-screen text-slate-900" 
+    <div
+      className="min-h-screen text-slate-900"
       lang={site.language || 'fr'}
       style={bgStyle}
     >
       <HtmlLangSync lang={site.language || 'fr'} />
-      {blocks.length === 0 ? (
+      {globalHeaderBlocks.length > 0 && (
+        <header>
+          {globalHeaderBlocks.map(block => <BlockRenderer key={block.id} block={block} siteSlug={site.slug} />)}
+        </header>
+      )}
+      {pageBlocks.length === 0 ? (
         <div className="flex items-center justify-center min-h-[60vh] text-slate-500 font-medium">
           {locale.emptyPage}
         </div>
       ) : (
         <main lang={site.language || 'fr'} className={`mx-auto space-y-5 ${pageSettings.customClassName || ''}`} style={{ width: '100%', maxWidth: mainMaxWidth }}>
-          {blocks.map(block => <BlockRenderer key={block.id} block={block} siteSlug={site.slug} />)}
+          {pageBlocks.map(block => <BlockRenderer key={block.id} block={block} siteSlug={site.slug} />)}
         </main>
+      )}
+      {globalFooterBlocks.length > 0 && (
+        <footer>
+          {globalFooterBlocks.map(block => <BlockRenderer key={block.id} block={block} siteSlug={site.slug} />)}
+        </footer>
       )}
     </div>
   );

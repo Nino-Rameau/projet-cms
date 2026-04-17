@@ -146,6 +146,16 @@ export default function BlockRenderer({ block, siteSlug = '', isCustomDomain = f
     return processHtmlLinks(clean);
   };
 
+  const sanitizeInlineText = (html = '') => {
+    const clean = DOMPurify.sanitize(String(html), {
+      ALLOWED_TAGS: ['b', 'i', 'u', 'strong', 'em', 's', 'a', 'br', 'span'],
+      ALLOWED_ATTR: ['href', 'target', 'rel'],
+      ALLOW_DATA_ATTR: false,
+      FORCE_BODY: false,
+    });
+    return processHtmlLinks(clean);
+  };
+
   const normalizeSiteRelativePath = (rawPath = '') => {
     const trimmed = String(rawPath || '').trim();
     if (!trimmed) return '';
@@ -181,8 +191,12 @@ export default function BlockRenderer({ block, siteSlug = '', isCustomDomain = f
     }
   };
 
-  const renderRich = (html, fallback, className) => (
-    <div className={`${className} [&_a]:underline [&_a]:underline-offset-2`} dangerouslySetInnerHTML={{ __html: sanitizeRichText(html || fallback) }} />
+  const renderRich = (html, fallback, className, Tag = 'div') => (
+    <Tag className={`${className} [&_a]:underline [&_a]:underline-offset-2`} dangerouslySetInnerHTML={{ __html: sanitizeRichText(html || fallback) }} />
+  );
+
+  const renderInline = (html, fallback, className, Tag, inlineStyle = {}) => (
+    <Tag className={`${className} [&_a]:underline [&_a]:underline-offset-2`} style={inlineStyle} dangerouslySetInnerHTML={{ __html: sanitizeInlineText(html || fallback) }} />
   );
 
   const { type, props = {}, style = {}, children = [] } = block;
@@ -191,17 +205,17 @@ export default function BlockRenderer({ block, siteSlug = '', isCustomDomain = f
 
   switch (type.toLowerCase()) {
     case 'text':
-      return <div style={{...style, ...props.style}}>{renderRich(content, 'Texte', `text-slate-800 leading-relaxed ${className}`)}</div>;
+      return renderInline(content, 'Texte', `text-slate-800 leading-relaxed ${className}`, 'p', {...style, ...props.style});
     case 'paragraph':
-      return <div style={{...style, ...props.style}}>{renderRich(content, 'Paragraphe', `text-slate-700 leading-relaxed mb-4 ${className}`)}</div>;
+      return renderInline(content, 'Paragraphe', `text-slate-700 leading-relaxed mb-4 ${className}`, 'p', {...style, ...props.style});
     case 'h1':
-      return <div style={{...style, ...props.style}}>{renderRich(content, 'Titre H1', `text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-6 ${className}`)}</div>;
+      return renderInline(content, 'Titre H1', `text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-6 ${className}`, 'h1', {...style, ...props.style});
     case 'h2':
-      return <div style={{...style, ...props.style}}>{renderRich(content, 'Titre H2', `text-3xl md:text-4xl font-bold tracking-tight text-slate-900 mb-5 ${className}`)}</div>;
+      return renderInline(content, 'Titre H2', `text-3xl md:text-4xl font-bold tracking-tight text-slate-900 mb-5 ${className}`, 'h2', {...style, ...props.style});
     case 'h3':
-      return <div style={{...style, ...props.style}}>{renderRich(content, 'Titre H3', `text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 mb-4 ${className}`)}</div>;
+      return renderInline(content, 'Titre H3', `text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 mb-4 ${className}`, 'h3', {...style, ...props.style});
     case 'h4':
-      return <div style={{...style, ...props.style}}>{renderRich(content, 'Titre H4', `text-xl md:text-2xl font-semibold tracking-tight text-slate-900 mb-3 ${className}`)}</div>;
+      return renderInline(content, 'Titre H4', `text-xl md:text-2xl font-semibold tracking-tight text-slate-900 mb-3 ${className}`, 'h4', {...style, ...props.style});
     case 'title':
     case 'heading':
       return <h2 className={`font-bold text-2xl mb-4 ${className}`} style={{...style, ...props.style}}>{content || 'Titre'}</h2>;
@@ -233,7 +247,7 @@ export default function BlockRenderer({ block, siteSlug = '', isCustomDomain = f
       return (
         <blockquote className={`mb-5 rounded-r-lg border-l-4 border-blue-400 bg-blue-50/50 px-4 py-3 italic text-slate-700 ${className}`} style={{...style, ...props.style}}>
           {content || 'Citation'}
-          {props.author ? <div className="mt-2 text-xs not-italic text-slate-500">- {props.author}</div> : null}
+          {props.author ? <cite className="mt-2 block text-xs not-italic text-slate-500">— {props.author}</cite> : null}
         </blockquote>
       );
     case 'divider':
